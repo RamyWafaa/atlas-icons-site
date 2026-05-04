@@ -32,7 +32,7 @@
   --radius-sm: 8px;
   --radius-xs: 6px;
 
-  --max-w: 1240px;
+  --max-w: 1360px;
   --transition: 0.2s ease;
   --topbar-h: 132px;
   --topbar-h-scrolled: 68px;
@@ -359,8 +359,8 @@ h1, h2, h3, h4, h5, h6 {
 .grid-area { grid-area: grid; min-width: 0; }
 .icon-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
-  gap: 4px;
+  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+  gap: 6px;
 }
 .icon-card {
   aspect-ratio: 1;
@@ -371,7 +371,7 @@ h1, h2, h3, h4, h5, h6 {
   border: 1px solid transparent;
   border-radius: var(--radius-sm);
   cursor: pointer;
-  font-size: 24px;
+  font-size: 26px;
   color: var(--text);
   transition: background-color var(--transition), border-color var(--transition), transform var(--transition);
   position: relative;
@@ -391,20 +391,21 @@ h1, h2, h3, h4, h5, h6 {
 .pack-discovery {
   max-width: var(--max-w);
   margin: 0 auto;
-  padding: 32px 32px 56px;
+  padding: 56px 32px 64px;
   border-top: 1px solid var(--border);
 }
-.pack-discovery .section-title { margin-bottom: 24px; font-size: clamp(22px, 3vw, 30px); }
+.pack-discovery .section-eyebrow { margin-bottom: 16px; }
+.pack-discovery .section-title { margin-bottom: 36px; font-size: clamp(28px, 3.5vw, 36px); }
 .pack-discovery-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: 10px;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 14px;
 }
 .pack-card {
   display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 14px;
+  flex-direction: column;
+  gap: 18px;
+  padding: 22px 22px 18px;
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: var(--radius-card);
@@ -412,43 +413,59 @@ h1, h2, h3, h4, h5, h6 {
   text-align: left;
   font: inherit;
   color: var(--text);
-  transition: border-color var(--transition), box-shadow var(--transition);
+  transition: border-color var(--transition), box-shadow var(--transition), transform var(--transition);
   text-decoration: none;
+  min-height: 140px;
+  position: relative;
 }
 .pack-card:hover {
   border-color: var(--text);
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
   text-decoration: none;
   opacity: 1;
 }
-.pack-card-glyphs {
-  display: flex;
-  gap: 4px;
-  flex-shrink: 0;
-}
-.pack-card-glyphs i {
-  font-size: 18px;
-  color: var(--text);
-}
 .pack-card-text {
   display: flex;
-  flex-direction: column;
-  min-width: 0;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
 }
 .pack-card-name {
   font-family: var(--font-display);
-  font-size: 14px;
-  font-weight: 600;
-  letter-spacing: -0.01em;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  margin: 0;
 }
 .pack-card-count {
   font-size: 12px;
-  color: var(--text-muted);
+  color: var(--lime-fg);
   font-variant-numeric: tabular-nums;
+  background: var(--lime);
+  padding: 3px 10px;
+  border-radius: var(--radius-pill);
+  font-weight: 600;
+  white-space: nowrap;
 }
+.pack-card-glyphs {
+  display: flex;
+  gap: 8px;
+  margin-top: auto;
+}
+.pack-card-glyphs i {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 1;
+  font-size: 26px;
+  color: var(--text);
+  background: var(--bg-soft);
+  border-radius: var(--radius-xs);
+  transition: background-color var(--transition);
+}
+.pack-card:hover .pack-card-glyphs i { background: var(--lime-soft); }
 
 /* ---------- Frameworks section ---------- */
 .frameworks-section {
@@ -483,14 +500,14 @@ h1, h2, h3, h4, h5, h6 {
 }
 .framework-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: 14px;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
 }
 .framework-card {
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: var(--radius-card);
-  padding: 22px;
+  padding: 26px;
   color: var(--text);
   text-decoration: none;
   transition: transform var(--transition), border-color var(--transition), box-shadow var(--transition);
@@ -505,9 +522,53 @@ h1, h2, h3, h4, h5, h6 {
   box-shadow: var(--shadow-md);
   opacity: 1;
 }
+
+/* Figma: full-width centered highlight card at the bottom of the grid */
 .framework-card.framework-figma {
-  background: linear-gradient(135deg, var(--bg-card), var(--lime-soft));
-  border-color: var(--lime);
+  grid-column: 1 / -1;
+  max-width: 720px;
+  margin: 16px auto 0;
+  background: linear-gradient(135deg, #ffffff, var(--lime-soft) 60%, var(--lime));
+  border: 2px solid var(--text);
+  padding: 36px 40px;
+  text-align: center;
+  align-items: center;
+  position: relative;
+}
+.framework-card.framework-figma:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-lg);
+}
+.framework-figma-badge {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  background: var(--text);
+  color: var(--bg);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  border-radius: var(--radius-pill);
+}
+.framework-figma .framework-logo-figma {
+  width: 60px; height: 60px;
+  background: transparent;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 4px;
+}
+.framework-figma h3 { font-size: 22px; }
+.framework-figma p { font-size: 14px; max-width: 480px; margin: 0 auto; }
+.framework-figma .framework-cta {
+  margin-top: 10px;
+  padding: 9px 18px;
+  background: var(--text);
+  color: var(--bg);
+  border-radius: var(--radius-pill);
+  font-weight: 600;
 }
 .framework-logo {
   display: inline-flex;
@@ -554,13 +615,44 @@ h1, h2, h3, h4, h5, h6 {
   white-space: nowrap;
 }
 
-/* ---------- CTA Band (lime) ---------- */
+/* ---------- CTA Band (rounded lime card) ---------- */
 .cta-band {
+  background: var(--bg);
+  padding: 56px 32px;
+}
+.cta-band-card {
+  max-width: var(--max-w);
+  margin: 0 auto;
   background: var(--lime);
-  padding: 64px 32px;
+  border-radius: 28px;
+  padding: 80px 48px;
+  position: relative;
+  overflow: hidden;
+}
+.cta-band-card::before {
+  content: '';
+  position: absolute;
+  top: -80px; right: -80px;
+  width: 240px; height: 240px;
+  background: var(--lime-dark);
+  border-radius: 50%;
+  opacity: 0.4;
+  pointer-events: none;
+}
+.cta-band-card::after {
+  content: '';
+  position: absolute;
+  bottom: -100px; left: -100px;
+  width: 280px; height: 280px;
+  background: var(--lime-dark);
+  border-radius: 50%;
+  opacity: 0.35;
+  pointer-events: none;
 }
 .cta-band-inner {
-  max-width: 760px;
+  position: relative;
+  z-index: 1;
+  max-width: 720px;
   margin: 0 auto;
   text-align: center;
   color: var(--lime-fg);
@@ -613,11 +705,11 @@ h1, h2, h3, h4, h5, h6 {
 
 /* ---------- FAQ ---------- */
 .faq {
-  max-width: 720px;
+  max-width: 920px;
   margin: 0 auto;
-  padding: 64px 32px;
+  padding: 80px 32px;
 }
-.faq .section-title { margin-bottom: 32px; }
+.faq .section-title { margin-bottom: 40px; }
 .faq-list { display: flex; flex-direction: column; gap: 8px; }
 .faq-item {
   background: var(--bg-card);
@@ -764,12 +856,12 @@ h1, h2, h3, h4, h5, h6 {
 
 .modal-head {
   display: grid;
-  grid-template-columns: 96px 1fr;
-  gap: 16px;
+  grid-template-columns: 140px 1fr;
+  gap: 18px;
   align-items: center;
 }
 .modal-preview {
-  width: 96px; height: 96px;
+  width: 140px; height: 140px;
   background: var(--bg-soft);
   border: 1px solid var(--border);
   border-radius: var(--radius-card);
@@ -777,6 +869,7 @@ h1, h2, h3, h4, h5, h6 {
   align-items: center;
   justify-content: center;
   overflow: hidden;
+  flex-shrink: 0;
 }
 .modal-svg-wrap {
   display: flex;
@@ -784,7 +877,9 @@ h1, h2, h3, h4, h5, h6 {
   justify-content: center;
   width: 100%; height: 100%;
 }
-.modal-svg-wrap svg { display: block; width: 64px; height: 64px; }
+/* SVG width/height come from JS attributes — only enforce a max so very
+   large user-chosen sizes don't overflow the preview tile. */
+.modal-svg-wrap svg { display: block; max-width: 100%; max-height: 100%; }
 .modal-meta { min-width: 0; }
 .modal-title {
   font-family: var(--font-mono);

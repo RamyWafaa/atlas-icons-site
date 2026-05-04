@@ -10,7 +10,7 @@
   var SVG_VIEWBOX = '-32 -32 1088 1088';
   var SVG_FLIP = 'translate(0, 960) scale(1, -1)';
   var SVG_NS = 'http://www.w3.org/2000/svg';
-  var WEIGHT_SUFFIXES = { 'thin': '-thin', 'regular': '', 'bold': '-bold' };
+  var WEIGHT_SUFFIXES = { 'all': null, 'thin': '-thin', 'regular': '', 'bold': '-bold' };
   var SCROLL_COMPACT_AT = 220;
 
   var els = {
@@ -59,7 +59,7 @@
     iconsByPackByWeight: {},  // { pack: { thin: [...], regular: [...], bold: [...] } }
     packCounts: {},           // count of REGULAR icons per pack (for sidebar)
     packCountsRaw: {},        // count including all weights
-    weight: 'regular',         // default — fixes per-pack stroke consistency
+    weight: 'all',            // 'all' = show all 7,980 icons across all 3 weights
     activePack: 'all',
     query: '',
     filtered: [],
@@ -127,9 +127,15 @@
 
   function computeRegularCounts() {
     state.packCounts = {};
-    Object.keys(state.iconsByPackByWeight).forEach(function (p) {
-      state.packCounts[p] = state.iconsByPackByWeight[p][state.weight].length;
-    });
+    if (state.weight === 'all') {
+      Object.keys(state.packCountsRaw).forEach(function (p) {
+        state.packCounts[p] = state.packCountsRaw[p];
+      });
+    } else {
+      Object.keys(state.iconsByPackByWeight).forEach(function (p) {
+        state.packCounts[p] = state.iconsByPackByWeight[p][state.weight].length;
+      });
+    }
   }
 
   function totalForCurrentWeight() {
@@ -199,9 +205,24 @@
       card.dataset.pack = p;
       card.setAttribute('aria-label', 'Browse ' + prettyPack(p) + ' pack');
 
+      // Top row — name + count chip
+      var text = document.createElement('div');
+      text.className = 'pack-card-text';
+      var name = document.createElement('h3');
+      name.className = 'pack-card-name';
+      name.textContent = prettyPack(p);
+      var count = document.createElement('span');
+      count.className = 'pack-card-count';
+      count.textContent = formatNum(state.packCountsRaw[p]);
+      text.appendChild(name);
+      text.appendChild(count);
+
+      // Bottom row — 3 sample glyphs (regular weight if available, else first 3)
       var glyphs = document.createElement('div');
       glyphs.className = 'pack-card-glyphs';
-      var packIcons = (state.iconsByPackByWeight[p] && state.iconsByPackByWeight[p][state.weight]) || [];
+      var sourceWeight = state.weight === 'all' ? 'regular' : state.weight;
+      var packIcons = (state.iconsByPackByWeight[p] && state.iconsByPackByWeight[p][sourceWeight]) || [];
+      if (packIcons.length === 0) packIcons = state.iconsByPack[p] || [];
       var samples = pickSamples(packIcons, DISCOVERY_GLYPHS);
       samples.forEach(function (icon) {
         var i = document.createElement('i');
@@ -209,19 +230,8 @@
         glyphs.appendChild(i);
       });
 
-      var text = document.createElement('div');
-      text.className = 'pack-card-text';
-      var name = document.createElement('span');
-      name.className = 'pack-card-name';
-      name.textContent = prettyPack(p);
-      var count = document.createElement('span');
-      count.className = 'pack-card-count';
-      count.textContent = formatNum(state.packCountsRaw[p]) + ' icons';
-      text.appendChild(name);
-      text.appendChild(count);
-
-      card.appendChild(glyphs);
       card.appendChild(text);
+      card.appendChild(glyphs);
       frag.appendChild(card);
     });
     els.packDiscoveryGrid.appendChild(frag);
@@ -265,12 +275,11 @@
   function applyFilters() {
     var q = state.query.trim().toLowerCase();
     var pack = state.activePack;
-    var weightSuffix = WEIGHT_SUFFIXES[state.weight];
     var hits = [];
     for (var i = 0; i < state.icons.length; i++) {
       var icon = state.icons[i];
-      // Filter by weight (default behavior — gives consistent stroke per pack)
-      if (weightOf(icon.c) !== state.weight) continue;
+      // Weight filter — 'all' skips this constraint entirely
+      if (state.weight !== 'all' && weightOf(icon.c) !== state.weight) continue;
       if (pack !== 'all' && icon.p !== pack) continue;
       if (!matchesQuery(icon, q)) continue;
       hits.push(icon);
@@ -280,7 +289,7 @@
     while (els.grid.firstChild) els.grid.removeChild(els.grid.firstChild);
     els.empty.hidden = hits.length > 0;
     els.searchCount.textContent = q ? formatNum(hits.length) + ' / ' + formatNum(totalForCurrentWeight()) : '';
-    els.browseCount.textContent = formatNum(hits.length) + (hits.length === 1 ? ' design' : ' designs');
+    els.browseCount.textContent = formatNum(hits.length) + ' icons';
     renderMore();
   }
 
@@ -680,7 +689,7 @@
     var parts = [];
     if (state.activePack && state.activePack !== 'all') parts.push('pack/' + state.activePack);
     if (state.query) parts.push('search/' + encodeURIComponent(state.query));
-    if (state.weight !== 'regular') parts.push('weight/' + state.weight);
+    if (state.weight !== 'all') parts.push('weight/' + state.weight);
     var newHash = parts.length ? '#' + parts.join('&') : '';
     if (newHash) {
       if (location.hash !== newHash) history.replaceState(null, '', newHash);
