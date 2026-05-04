@@ -924,6 +924,58 @@ img, svg { max-width: 100%; }
 }
 .btn-link:hover { color: var(--text); opacity: 1; text-decoration: underline; text-underline-offset: 3px; }
 
+/* ---------- All packs index (SEO + UX) ---------- */
+.all-packs {
+  max-width: var(--max-w);
+  margin: 0 auto;
+  padding: 64px 32px 32px;
+  border-top: 1px solid var(--border);
+}
+.all-packs-title {
+  font-family: var(--font-display);
+  font-size: clamp(24px, 3.5vw, 36px);
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  margin: 0 0 8px;
+  text-align: center;
+}
+.all-packs-sub {
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 15px;
+  margin: 0 0 32px;
+}
+.all-packs-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 6px;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.all-packs-list a {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-size: 14px;
+  transition: background-color var(--transition);
+}
+.all-packs-list a:hover {
+  background: var(--bg-soft);
+  text-decoration: none;
+  opacity: 1;
+}
+.all-packs-list a span {
+  font-size: 11px;
+  color: var(--text-faint);
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
+}
+
 /* ---------- Footer ---------- */
 .site-footer {
   padding: 56px 32px 28px;

@@ -257,6 +257,32 @@ def main() -> int:
         return 1
     with open(TEMPLATE_HTML, encoding="utf-8") as f:
         template = f.read()
+
+    # Update the static crawlable pack-link block in index.html. We keep this
+    # block in the home page so search engines discover every pack URL on
+    # first crawl, even before any JS executes. Block lives between the
+    # `<!-- BEGIN PACK_LINKS -->` and `<!-- END PACK_LINKS -->` markers.
+    pack_links_html = "\n".join(
+        f'      <li><a href="/pack/{p}/">{pretty(p)} <span>{pack_counts[p]}</span></a></li>'
+        for p in sorted(pack_counts.keys())
+    )
+    new_block = (
+        "<!-- BEGIN PACK_LINKS -->\n"
+        + pack_links_html
+        + "\n      <!-- END PACK_LINKS -->"
+    )
+    template_with_links = re.sub(
+        r"<!-- BEGIN PACK_LINKS -->.*?<!-- END PACK_LINKS -->",
+        new_block,
+        template,
+        count=1,
+        flags=re.DOTALL,
+    )
+    if template_with_links != template:
+        with open(TEMPLATE_HTML, "w", encoding="utf-8") as f:
+            f.write(template_with_links)
+        template = template_with_links
+        print(f"Updated PACK_LINKS block in {TEMPLATE_HTML} ({len(pack_counts)} entries)")
     # Sanity check that the template has the tokens we expect
     missing_tokens = [k for k, v in TEMPLATE_TOKENS.items() if v not in template]
     if missing_tokens:
