@@ -317,6 +317,13 @@
       clearTimeout(debounce);
       debounce = setTimeout(function () {
         state.query = els.search.value;
+        // When the user starts a fresh search, reset the active pack to
+        // "all" so results span the whole library — otherwise a previous
+        // pack click silently scopes the search and returns 0 hits.
+        if (state.query.trim() && state.activePack !== 'all') {
+          state.activePack = 'all';
+          syncSidebarActive();
+        }
         writeUrlState();
         route();
       }, DEBOUNCE_MS);

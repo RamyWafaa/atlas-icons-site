@@ -3,11 +3,11 @@
    Refined SaaS aesthetic — not neo-brutalist. Pill chips, soft shadows, subtle borders. */
 
 :root {
-  --bg: #fafafa;
+  --bg: #ffffff;
   --bg-card: #ffffff;
-  --bg-soft: #f5f5f4;
-  --bg-hover: #f0f0ee;
-  --bg-modal: rgba(0, 0, 0, 0.55);
+  --bg-soft: #f7f7f6;
+  --bg-hover: #f0efed;
+  --bg-modal: rgba(10, 10, 10, 0.6);
 
   --border: #ececec;
   --border-strong: #d4d4d4;
@@ -45,23 +45,8 @@
   --font-mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #0a0a0b;
-    --bg-card: #18181b;
-    --bg-soft: #131316;
-    --bg-hover: #27272a;
-    --bg-modal: rgba(0, 0, 0, 0.7);
-    --border: #27272a;
-    --border-strong: #3f3f46;
-    --text: #fafafa;
-    --text-soft: #e4e4e7;
-    --text-muted: #a1a1aa;
-    --text-faint: #71717a;
-    --link: #fafafa;
-    --lime-soft: #2a3a08;
-  }
-}
+/* Light theme only — GetIllustrations brand uses white backgrounds.
+   Dark-mode auto-switching removed per design direction. */
 
 * { box-sizing: border-box; }
 html, body { margin: 0; padding: 0; }
@@ -87,13 +72,10 @@ img, svg { max-width: 100%; }
   align-items: center;
   justify-content: space-between;
   padding: 16px 32px;
-  background: rgba(250, 250, 250, 0.85);
+  background: rgba(255, 255, 255, 0.92);
   -webkit-backdrop-filter: saturate(180%) blur(14px);
           backdrop-filter: saturate(180%) blur(14px);
   border-bottom: 1px solid var(--border);
-}
-@media (prefers-color-scheme: dark) {
-  .topbar { background: rgba(10, 10, 11, 0.85); }
 }
 .topbar-brand {
   display: flex;
