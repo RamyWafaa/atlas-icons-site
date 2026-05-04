@@ -693,6 +693,10 @@ img, svg { max-width: 100%; }
 .btn-copy.is-copied { background: var(--lime); color: var(--lime-fg); border-color: var(--text); }
 
 /* ---------- Modal ---------- */
+/* CRITICAL: [hidden] override so the modal stays closed on page load.
+   Without this, our `display: flex` overrides the HTML `hidden` attribute
+   and the empty modal renders behind a backdrop on first paint. */
+.modal-root[hidden] { display: none !important; }
 .modal-root {
   position: fixed;
   inset: 0;
