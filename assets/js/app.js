@@ -1,4 +1,5 @@
-/* Atlas Icons — search, filter, copy, modal. Vanilla JS, no innerHTML. */
+/* Atlas Icons — search, filter, copy, modal with live SVG preview + download.
+   Vanilla JS, no innerHTML, no deps. */
 (function () {
   'use strict';
 
@@ -6,6 +7,9 @@
   var PAGE_SIZE = 240;
   var DEBOUNCE_MS = 80;
   var SAMPLE_PER_CATEGORY = 6;
+  var DEFAULT_VIEWBOX = '0 0 1024 1024';
+  var DEFAULT_FLIP = 'translate(0, 960) scale(1, -1)';
+  var SVG_NS = 'http://www.w3.org/2000/svg';
 
   var els = {
     search: document.getElementById('searchInput'),
@@ -26,7 +30,7 @@
     loadMoreBtn: document.getElementById('loadMoreBtn'),
 
     modal: document.getElementById('modalRoot'),
-    mPreview: document.getElementById('modalIconPreview'),
+    modalSvgWrap: document.getElementById('modalSvgWrap'),
     mTitle: document.getElementById('modalTitle'),
     mPack: document.getElementById('modalPack'),
     snippetCode: document.getElementById('snippetCode'),
@@ -34,18 +38,32 @@
     sUnicode: document.getElementById('snippetUnicode'),
     dlPackZip: document.getElementById('downloadPackZip'),
     viewPackGh: document.getElementById('viewPackOnGithub'),
+
+    ctrlColor: document.getElementById('ctrlColor'),
+    ctrlSize: document.getElementById('ctrlSize'),
+    ctrlSizeVal: document.getElementById('ctrlSizeVal'),
+    ctrlVariants: document.getElementById('ctrlVariants'),
+    variantsRow: document.getElementById('variantsRow'),
+    btnDownloadSvg: document.getElementById('downloadSvgBtn'),
+    btnCopySvg: document.getElementById('copySvgBtn'),
   };
 
   var state = {
-    icons: [],            // [{n,c,p,u}]
+    icons: [],
+    iconsByClass: {},
     packCounts: {},
     activePack: 'all',
     query: '',
     filtered: [],
     rendered: 0,
-    iconsByPack: {},      // { packName: [icons] } — lazy-cached
-    activeTab: 'html',
+    iconsByPack: {},
+    activeTab: 'svg',
     activeIcon: null,
+    color: '#0a0a0a',
+    size: 64,
+    variants: [],   // computed per icon
+    viewBox: DEFAULT_VIEWBOX,
+    flip: DEFAULT_FLIP,
   };
 
   // ---------- bootstrap ----------
@@ -54,10 +72,12 @@
     .then(function (data) {
       state.icons = data.icons || [];
       state.packCounts = data.packs || {};
+      state.viewBox = data.viewBox || DEFAULT_VIEWBOX;
+      state.flip = data.flipTransform || DEFAULT_FLIP;
       var total = data.total || state.icons.length;
       els.countAll.textContent = formatNum(total);
       els.totalCount.textContent = formatNum(total);
-      indexIconsByPack();
+      indexIcons();
       buildPackSidebar();
       buildCategoryGrid();
       readUrlState();
@@ -75,16 +95,18 @@
       console.error(e);
     });
 
-  function indexIconsByPack() {
+  function indexIcons() {
     state.iconsByPack = {};
+    state.iconsByClass = {};
     for (var i = 0; i < state.icons.length; i++) {
-      var p = state.icons[i].p;
-      if (!state.iconsByPack[p]) state.iconsByPack[p] = [];
-      state.iconsByPack[p].push(state.icons[i]);
+      var icon = state.icons[i];
+      if (!state.iconsByPack[icon.p]) state.iconsByPack[icon.p] = [];
+      state.iconsByPack[icon.p].push(icon);
+      state.iconsByClass[icon.c] = icon;
     }
   }
 
-  // ---------- view router (decides between category grid and filtered grid) ----------
+  // ---------- view router ----------
   function route() {
     var showFiltered = state.activePack !== 'all' || state.query.trim() !== '';
     els.categoryGrid.hidden = showFiltered;
@@ -122,7 +144,7 @@
       name.textContent = prettyPack(p);
       var count = document.createElement('span');
       count.className = 'category-card-count';
-      count.textContent = formatNum(state.packCounts[p]) + ' icons';
+      count.textContent = formatNum(state.packCounts[p]);
       head.appendChild(name);
       head.appendChild(count);
 
@@ -151,7 +173,7 @@
     return out;
   }
 
-  // ---------- sidebar (filtered view) ----------
+  // ---------- sidebar ----------
   function buildPackSidebar() {
     var packs = Object.keys(state.packCounts).sort();
     var frag = document.createDocumentFragment();
@@ -186,7 +208,7 @@
     writeUrlState();
   }
 
-  // ---------- filter + render (filtered view) ----------
+  // ---------- filter + render ----------
   function applyFilters() {
     var q = state.query.trim().toLowerCase();
     var pack = state.activePack;
@@ -229,12 +251,82 @@
     els.loadMoreWrap.hidden = state.rendered >= state.filtered.length;
   }
 
+  // ---------- SVG markup builders ----------
+  function buildSvgElement(icon, color, size) {
+    var svg = document.createElementNS(SVG_NS, 'svg');
+    svg.setAttribute('xmlns', SVG_NS);
+    svg.setAttribute('viewBox', state.viewBox);
+    svg.setAttribute('width', String(size));
+    svg.setAttribute('height', String(size));
+    svg.setAttribute('fill', color);
+    var g = document.createElementNS(SVG_NS, 'g');
+    g.setAttribute('transform', state.flip);
+    var path = document.createElementNS(SVG_NS, 'path');
+    path.setAttribute('d', icon.d || '');
+    g.appendChild(path);
+    svg.appendChild(g);
+    return svg;
+  }
+
+  function buildSvgString(icon, color, size) {
+    return [
+      '<svg xmlns="http://www.w3.org/2000/svg" viewBox="' + state.viewBox + '"',
+      ' width="' + size + '" height="' + size + '" fill="' + color + '">',
+      '<g transform="' + state.flip + '">',
+      '<path d="' + (icon.d || '') + '"/>',
+      '</g>',
+      '</svg>'
+    ].join('');
+  }
+
+  // ---------- variants (-thin, -bold, -fill, -duotone) ----------
+  function findVariants(icon) {
+    var classWithPrefix = icon.c;
+    var m = classWithPrefix.match(/^(at-.+?)(-thin|-bold|-fill|-duotone|-solid|-line)?$/);
+    if (!m) return [{ key: 'default', label: 'Default', icon: icon }];
+    var root = m[1];
+    var found = [];
+    var suffixes = ['-thin', '', '-bold', '-fill', '-duotone', '-solid', '-line'];
+    suffixes.forEach(function (s) {
+      var candidateClass = root + s;
+      var ic = state.iconsByClass[candidateClass];
+      if (ic) {
+        var label;
+        if (s === '-thin') label = 'Thin';
+        else if (s === '') label = 'Regular';
+        else if (s === '-bold') label = 'Bold';
+        else if (s === '-fill') label = 'Fill';
+        else if (s === '-duotone') label = 'Duotone';
+        else if (s === '-solid') label = 'Solid';
+        else if (s === '-line') label = 'Line';
+        else label = s;
+        found.push({ key: s || 'regular', label: label, icon: ic });
+      }
+    });
+    return found.length > 1 ? found : null;
+  }
+
+  function buildVariantButtons(variants, activeIcon) {
+    while (els.variantsRow.firstChild) els.variantsRow.removeChild(els.variantsRow.firstChild);
+    variants.forEach(function (v) {
+      var btn = document.createElement('button');
+      btn.className = 'variant-btn' + (v.icon.c === activeIcon.c ? ' is-active' : '');
+      btn.dataset.variantClass = v.icon.c;
+      btn.textContent = v.label;
+      els.variantsRow.appendChild(btn);
+    });
+  }
+
   // ---------- modal ----------
   function openModal(icon) {
     if (!icon) return;
     state.activeIcon = icon;
-    state.activeTab = 'html';
-    els.mPreview.className = icon.c;
+    state.activeTab = 'svg';
+    state.color = els.ctrlColor.value || '#0a0a0a';
+    state.size = parseInt(els.ctrlSize.value, 10) || 64;
+
+    refreshPreview();
+
     els.mTitle.textContent = icon.c;
     els.mPack.textContent = prettyPack(icon.p);
     els.sClass.textContent = icon.c;
@@ -243,10 +335,31 @@
       'https://github.com/Vectopus/Atlas-icons-font/archive/refs/heads/main.zip';
     els.viewPackGh.href =
       'https://github.com/Vectopus/Atlas-icons-font/tree/main/packs/' + icon.p;
+
+    var variants = findVariants(icon);
+    if (variants && variants.length > 1) {
+      state.variants = variants;
+      buildVariantButtons(variants, icon);
+      els.ctrlVariants.hidden = false;
+    } else {
+      state.variants = [];
+      els.ctrlVariants.hidden = true;
+    }
+
     syncModalTab();
     els.modal.hidden = false;
     els.modal.setAttribute('aria-hidden', 'false');
     document.body.style.overflow = 'hidden';
+  }
+
+  function refreshPreview() {
+    while (els.modalSvgWrap.firstChild) els.modalSvgWrap.removeChild(els.modalSvgWrap.firstChild);
+    if (!state.activeIcon) return;
+    var svg = buildSvgElement(state.activeIcon, state.color, state.size);
+    els.modalSvgWrap.appendChild(svg);
+    if (state.activeTab === 'svg') {
+      els.snippetCode.textContent = buildSvgString(state.activeIcon, state.color, state.size);
+    }
   }
 
   function syncModalTab() {
@@ -259,20 +372,22 @@
   }
 
   function snippetFor(icon, tab) {
-    var pascalName = toPascal(icon.c.slice(3)); // drop 'at-' prefix → ArrowDownThin
+    var pascalName = toPascal(icon.c.slice(3));
     var snakeName = icon.c.slice(3).replace(/-/g, '_');
     switch (tab) {
+      case 'svg':
+        return buildSvgString(icon, state.color, state.size);
       case 'react':
-        return "import { " + pascalName + " } from '@vectoricons/atlas-icons-react';\n\n<" + pascalName + ' size={24} />';
+        return "import { " + pascalName + " } from '@vectoricons/atlas-icons-react';\n\n<" + pascalName + ' size={' + state.size + '} color="' + state.color + '" />';
       case 'vue':
-        return "<template>\n  <" + pascalName + " :size=\"24\" />\n</template>\n\n<script setup>\nimport { " + pascalName + " } from '@vectoricons/atlas-icons-vue';\n</script>";
+        return "<template>\n  <" + pascalName + " :size=\"" + state.size + "\" color=\"" + state.color + "\" />\n</template>\n\n<script setup>\nimport { " + pascalName + " } from '@vectoricons/atlas-icons-vue';\n</script>";
       case 'flutter':
-        return "import 'package:atlas_icons/atlas_icons.dart';\n\nIcon(AtlasIcons." + snakeName + ", size: 24)";
+        return "import 'package:atlas_icons/atlas_icons.dart';\n\nIcon(AtlasIcons." + snakeName + ", size: " + state.size + ", color: Color(0xFF" + state.color.replace('#', '').toUpperCase() + "))";
       case 'reactnative':
-        return "import { " + pascalName + " } from '@vectoricons/atlas-icons-react-native';\n\n<" + pascalName + ' size={24} />';
+        return "import { " + pascalName + " } from '@vectoricons/atlas-icons-react-native';\n\n<" + pascalName + ' size={' + state.size + '} color="' + state.color + '" />';
       case 'html':
       default:
-        return '<i class="' + icon.c + '"></i>';
+        return '<i class="' + icon.c + '" style="color:' + state.color + ';font-size:' + state.size + 'px"></i>';
     }
   }
 
@@ -283,8 +398,10 @@
     state.activeIcon = null;
   }
 
+  // ---------- copy / download ----------
   function copyText(text, btn) {
     var done = function () {
+      if (!btn) return;
       btn.classList.add('is-copied');
       var prev = btn.textContent;
       btn.textContent = 'Copied';
@@ -310,6 +427,19 @@
     document.body.removeChild(ta);
   }
 
+  function downloadSvgFile(icon, color, size) {
+    var svg = buildSvgString(icon, color, size);
+    var blob = new Blob([svg], { type: 'image/svg+xml;charset=utf-8' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = icon.c + '.svg';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+  }
+
   // ---------- events ----------
   function bindEvents() {
     var debounce;
@@ -317,9 +447,6 @@
       clearTimeout(debounce);
       debounce = setTimeout(function () {
         state.query = els.search.value;
-        // When the user starts a fresh search, reset the active pack to
-        // "all" so results span the whole library — otherwise a previous
-        // pack click silently scopes the search and returns 0 hits.
         if (state.query.trim() && state.activePack !== 'all') {
           state.activePack = 'all';
           syncSidebarActive();
@@ -327,6 +454,28 @@
         writeUrlState();
         route();
       }, DEBOUNCE_MS);
+    });
+
+    els.ctrlColor.addEventListener('input', function () {
+      state.color = els.ctrlColor.value;
+      refreshPreview();
+      if (state.activeTab !== 'svg') syncModalTab();
+    });
+
+    els.ctrlSize.addEventListener('input', function () {
+      state.size = parseInt(els.ctrlSize.value, 10);
+      els.ctrlSizeVal.textContent = String(state.size);
+      refreshPreview();
+      if (state.activeTab !== 'svg') syncModalTab();
+    });
+
+    els.btnDownloadSvg.addEventListener('click', function () {
+      if (state.activeIcon) downloadSvgFile(state.activeIcon, state.color, state.size);
+    });
+
+    els.btnCopySvg.addEventListener('click', function () {
+      if (!state.activeIcon) return;
+      copyText(buildSvgString(state.activeIcon, state.color, state.size), els.btnCopySvg);
     });
 
     document.addEventListener('click', function (e) {
@@ -358,6 +507,22 @@
       if (card) {
         var idx = parseInt(card.dataset.idx, 10);
         openModal(state.filtered[idx]);
+        return;
+      }
+
+      var variantBtn = e.target.closest('.variant-btn');
+      if (variantBtn) {
+        var newClass = variantBtn.dataset.variantClass;
+        var newIcon = state.iconsByClass[newClass];
+        if (newIcon) {
+          state.activeIcon = newIcon;
+          els.mTitle.textContent = newIcon.c;
+          els.sClass.textContent = newIcon.c;
+          els.sUnicode.textContent = '\\' + newIcon.u;
+          buildVariantButtons(state.variants, newIcon);
+          refreshPreview();
+          if (state.activeTab !== 'svg') syncModalTab();
+        }
         return;
       }
 

@@ -204,15 +204,37 @@
       <button class="modal-close" data-modal-close aria-label="Close">&times;</button>
 
       <div class="modal-preview-row">
-        <div class="modal-preview"><i id="modalIconPreview"></i></div>
+        <div class="modal-preview" id="modalPreviewBox">
+          <span id="modalSvgWrap" class="modal-svg-wrap"></span>
+        </div>
         <div class="modal-meta">
           <h2 id="modalTitle" class="modal-title">icon-name</h2>
           <p class="modal-pack">in <span id="modalPack">pack</span> pack</p>
+          <div class="modal-controls">
+            <label class="ctrl">
+              <span class="ctrl-label">Color</span>
+              <input id="ctrlColor" type="color" value="#0a0a0a">
+            </label>
+            <label class="ctrl">
+              <span class="ctrl-label">Size <span id="ctrlSizeVal">64</span>px</span>
+              <input id="ctrlSize" type="range" min="16" max="160" step="4" value="64">
+            </label>
+            <div class="ctrl ctrl-variants" id="ctrlVariants" hidden>
+              <span class="ctrl-label">Stroke</span>
+              <div class="variants-row" id="variantsRow"></div>
+            </div>
+          </div>
         </div>
       </div>
 
+      <div class="modal-actions modal-actions-primary">
+        <button class="btn-primary" id="downloadSvgBtn">Download SVG</button>
+        <button class="btn-secondary" id="copySvgBtn">Copy SVG</button>
+      </div>
+
       <div class="modal-tabs" role="tablist">
-        <button class="modal-tab is-active" data-tab="html" role="tab">HTML</button>
+        <button class="modal-tab is-active" data-tab="svg" role="tab">SVG</button>
+        <button class="modal-tab" data-tab="html" role="tab">Webfont</button>
         <button class="modal-tab" data-tab="react" role="tab">React</button>
         <button class="modal-tab" data-tab="vue" role="tab">Vue</button>
         <button class="modal-tab" data-tab="flutter" role="tab">Flutter</button>
@@ -237,9 +259,9 @@
         </div>
       </div>
 
-      <div class="modal-actions">
-        <a id="downloadPackZip" class="btn-primary" href="#" target="_blank" rel="noopener noreferrer">Download pack (ZIP)</a>
-        <a id="viewPackOnGithub" class="btn-secondary" href="#" target="_blank" rel="noopener noreferrer">View on GitHub</a>
+      <div class="modal-actions modal-actions-secondary">
+        <a id="downloadPackZip" class="btn-secondary" href="#" target="_blank" rel="noopener noreferrer">Download whole pack (ZIP)</a>
+        <a id="viewPackOnGithub" class="btn-link" href="#" target="_blank" rel="noopener noreferrer">View on GitHub →</a>
       </div>
     </div>
   </div>
