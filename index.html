@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Atlas Icons — 7,980 free open-source icons by Vectopus</title>
+  <meta name="description" content="Atlas Icons is a free, open-source icon library with 7,980 icons across 41 packs. Search, copy, and use as a webfont, SVG, or in React, Vue, Flutter, React Native.">
+  <link rel="canonical" href="https://iconsatlas.com/">
+
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Atlas Icons — 7,980 free open-source icons">
+  <meta property="og:description" content="Free icon library, MIT licensed. 41 packs, webfont + SVG + framework wrappers (React, Vue, Flutter, React Native).">
+  <meta property="og:url" content="https://iconsatlas.com/">
+  <meta property="og:image" content="https://iconsatlas.com/assets/img/og-image.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="theme-color" content="#0f172a">
+  <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
+
+  <link rel="stylesheet" href="vendor/atlas-icons-font/style.css">
+  <link rel="stylesheet" href="assets/css/site.css">
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "Atlas Icons",
+    "description": "Free, open-source icon library with 7,980 icons across 41 packs.",
+    "applicationCategory": "DeveloperApplication",
+    "operatingSystem": "Any",
+    "offers": {"@type": "Offer", "price": "0", "priceCurrency": "USD"},
+    "license": "https://opensource.org/licenses/MIT",
+    "author": {"@type": "Person", "name": "Ramy Wafaa"},
+    "url": "https://iconsatlas.com/",
+    "downloadUrl": "https://github.com/Vectopus/Atlas-icons-font"
+  }
+  </script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="brand">
+      <span class="brand-mark"><i class="at-artboards"></i></span>
+      <div class="brand-text">
+        <h1>Atlas Icons</h1>
+        <p class="brand-sub"><span id="totalCount">7,980</span> free icons &middot; MIT &middot; <a href="https://github.com/Vectopus/Atlas-icons-font" target="_blank" rel="noopener noreferrer">GitHub</a></p>
+      </div>
+    </div>
+    <div class="search-wrap">
+      <input
+        id="searchInput"
+        type="search"
+        placeholder="Search 7,980 icons. Try arrow, heart, lock, dashboard..."
+        autocomplete="off"
+        spellcheck="false"
+        aria-label="Search icons">
+      <span class="search-count" id="searchCount"></span>
+    </div>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar" aria-label="Icon packs">
+      <button class="pack-pill is-active" data-pack="all">All packs <span class="pill-count" id="countAll">7,980</span></button>
+      <nav id="packList" class="pack-list" aria-label="Filter by pack"></nav>
+      <div class="sidebar-footer">
+        <a href="https://github.com/Vectopus/Atlas-icons-font/archive/refs/heads/main.zip">Download all (ZIP)</a>
+        <a href="https://www.npmjs.com/package/@vectoricons/atlas-icons" target="_blank" rel="noopener noreferrer">npm</a>
+        <a href="https://github.com/Vectopus" target="_blank" rel="noopener noreferrer">React, Vue, Flutter, RN</a>
+      </div>
+    </aside>
+
+    <main class="main" id="iconGridWrap">
+      <div id="emptyState" class="empty-state" hidden>
+        <p>No icons match. Try a shorter search.</p>
+      </div>
+      <div id="iconGrid" class="icon-grid" aria-live="polite"></div>
+      <div id="loadMoreWrap" class="load-more-wrap" hidden>
+        <button id="loadMoreBtn" class="btn-secondary">Load more</button>
+      </div>
+    </main>
+  </div>
+
+  <footer class="site-footer">
+    <p>
+      Atlas Icons by <a href="https://github.com/RamyWafaa" target="_blank" rel="noopener noreferrer">Ramy Wafaa</a>.
+      Source: <a href="https://github.com/Vectopus/Atlas-icons-font" target="_blank" rel="noopener noreferrer">Vectopus/Atlas-icons-font</a>.
+      Site: <a href="https://github.com/RamyWafaa/atlas-icons-site" target="_blank" rel="noopener noreferrer">RamyWafaa/atlas-icons-site</a>.
+      MIT licensed.
+    </p>
+    <p class="footer-meta">
+      Need premium hand-drawn illustrations and icons too?
+      <a href="https://getillustrations.com/" target="_blank" rel="noopener noreferrer">getillustrations.com</a>
+    </p>
+  </footer>
+
+  <div id="modalRoot" class="modal-root" hidden aria-hidden="true">
+    <div class="modal-backdrop" data-modal-close></div>
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <button class="modal-close" data-modal-close aria-label="Close">&times;</button>
+      <div class="modal-preview"><i id="modalIconPreview"></i></div>
+      <h2 id="modalTitle" class="modal-title">icon-name</h2>
+      <p class="modal-pack">in <span id="modalPack">pack</span> pack</p>
+
+      <div class="copy-row">
+        <label>HTML</label>
+        <code id="snippetHtml" class="snippet"></code>
+        <button class="btn-copy" data-copy="snippetHtml">Copy</button>
+      </div>
+      <div class="copy-row">
+        <label>Class</label>
+        <code id="snippetClass" class="snippet"></code>
+        <button class="btn-copy" data-copy="snippetClass">Copy</button>
+      </div>
+      <div class="copy-row">
+        <label>Codepoint</label>
+        <code id="snippetUnicode" class="snippet"></code>
+        <button class="btn-copy" data-copy="snippetUnicode">Copy</button>
+      </div>
+
+      <div class="modal-actions">
+        <a id="downloadPackZip" class="btn-primary" href="#" target="_blank" rel="noopener noreferrer">Download pack (ZIP)</a>
+        <a id="viewPackOnGithub" class="btn-secondary" href="#" target="_blank" rel="noopener noreferrer">View on GitHub</a>
+      </div>
+
+      <p class="modal-howto">
+        Add the stylesheet, then drop the <code>&lt;i&gt;</code> tag anywhere:
+        <br>
+        <code>&lt;link rel="stylesheet" href="https://unpkg.com/@vectoricons/atlas-icons/style.css"&gt;</code>
+      </p>
+    </div>
+  </div>
+
+  <script src="assets/js/app.js"></script>
+</body>
+</html>
