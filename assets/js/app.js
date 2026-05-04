@@ -495,6 +495,7 @@
   function setWeight(w) {
     if (!WEIGHT_SUFFIXES.hasOwnProperty(w)) return;
     state.weight = w;
+    // Sync both the inline (browse-toolbar) and sticky (topbar) weight filter UIs
     var btns = document.querySelectorAll('.weight-btn');
     for (var i = 0; i < btns.length; i++) {
       var active = btns[i].dataset.weight === w;
@@ -505,7 +506,6 @@
     computeRegularCounts();
     refreshPackCounts();
     applyFilters();
-    // Refresh discovery cards too — the sample icons should reflect the active weight
     while (els.packDiscoveryGrid.firstChild) els.packDiscoveryGrid.removeChild(els.packDiscoveryGrid.firstChild);
     buildPackDiscovery();
   }
