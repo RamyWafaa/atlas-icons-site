@@ -142,7 +142,7 @@ def render_pack_page(template, pack, count, total, all_packs):
             f"React, Vue, Flutter. MIT licensed."
         )
     canonical = f"https://iconsatlas.com/pack/{pack}/"
-    og_title = f"{pname} Icons — {count} free SVG icons · Atlas Icons"
+    og_title = f"{pname} Icons — {unique} free icons in 3 weights · Atlas Icons"
 
     html = template
 
