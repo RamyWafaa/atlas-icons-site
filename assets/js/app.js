@@ -6,19 +6,21 @@
   var DATA_URL = 'assets/data/icons.json';
   var PAGE_SIZE = 240;
   var DEBOUNCE_MS = 80;
-  var DISCOVERY_GLYPHS = 4;
-  // viewBox is wider than 1024x1024 so paths that extend beyond the
-  // declared font ascent/descent (some go to Y=-85 in original coords,
-  // which maps to Y=1045 visual) don't get clipped at the bottom edge.
+  var DISCOVERY_GLYPHS = 3;
   var SVG_VIEWBOX = '-32 -32 1088 1088';
   var SVG_FLIP = 'translate(0, 960) scale(1, -1)';
   var SVG_NS = 'http://www.w3.org/2000/svg';
+  var WEIGHT_SUFFIXES = { 'thin': '-thin', 'regular': '', 'bold': '-bold' };
+  var SCROLL_COMPACT_AT = 220;
 
   var els = {
     search: document.getElementById('searchInput'),
+    searchSticky: document.getElementById('searchInputSticky'),
     searchCount: document.getElementById('searchCount'),
     countAll: document.getElementById('countAll'),
     totalCount: document.getElementById('totalCount'),
+
+    topbar: document.getElementById('topbar'),
 
     browseTitle: document.getElementById('browseTitle'),
     browseCount: document.getElementById('browseCount'),
@@ -51,10 +53,13 @@
   };
 
   var state = {
-    icons: [],
+    icons: [],                 // raw, all 7,980
     iconsByClass: {},
-    iconsByPack: {},
-    packCounts: {},
+    iconsByPack: {},          // includes all weights
+    iconsByPackByWeight: {},  // { pack: { thin: [...], regular: [...], bold: [...] } }
+    packCounts: {},           // count of REGULAR icons per pack (for sidebar)
+    packCountsRaw: {},        // count including all weights
+    weight: 'regular',         // default — fixes per-pack stroke consistency
     activePack: 'all',
     query: '',
     filtered: [],
@@ -71,23 +76,23 @@
     .then(function (r) { return r.json(); })
     .then(function (data) {
       state.icons = data.icons || [];
-      state.packCounts = data.packs || {};
-      var total = data.total || state.icons.length;
-      els.countAll.textContent = formatNum(total);
-      els.totalCount.textContent = formatNum(total);
+      state.packCountsRaw = data.packs || {};
       indexIcons();
+      computeRegularCounts();
+      els.countAll.textContent = formatNum(totalForCurrentWeight());
+      els.totalCount.textContent = formatNum(totalForCurrentWeight());
       buildPackSidebar();
       buildPackDiscovery();
       readUrlState();
-      // Per-pack pages set window.__INITIAL_PACK before app.js loads.
       if (typeof window !== 'undefined' && window.__INITIAL_PACK
-          && state.packCounts[window.__INITIAL_PACK]) {
+          && state.packCountsRaw[window.__INITIAL_PACK]) {
         state.activePack = window.__INITIAL_PACK;
         syncSidebarActive();
       }
       updateBrowseHeader();
       applyFilters();
       bindEvents();
+      bindScrollWatcher();
     })
     .catch(function (e) {
       var msg = document.createElement('p');
@@ -102,15 +107,38 @@
   function indexIcons() {
     state.iconsByPack = {};
     state.iconsByClass = {};
+    state.iconsByPackByWeight = {};
     for (var i = 0; i < state.icons.length; i++) {
       var icon = state.icons[i];
       if (!state.iconsByPack[icon.p]) state.iconsByPack[icon.p] = [];
       state.iconsByPack[icon.p].push(icon);
       state.iconsByClass[icon.c] = icon;
+      var w = weightOf(icon.c);
+      if (!state.iconsByPackByWeight[icon.p]) state.iconsByPackByWeight[icon.p] = { thin: [], regular: [], bold: [] };
+      state.iconsByPackByWeight[icon.p][w].push(icon);
     }
   }
 
-  // ---------- sidebar (always visible) ----------
+  function weightOf(className) {
+    if (className.endsWith('-thin')) return 'thin';
+    if (className.endsWith('-bold')) return 'bold';
+    return 'regular';
+  }
+
+  function computeRegularCounts() {
+    state.packCounts = {};
+    Object.keys(state.iconsByPackByWeight).forEach(function (p) {
+      state.packCounts[p] = state.iconsByPackByWeight[p][state.weight].length;
+    });
+  }
+
+  function totalForCurrentWeight() {
+    var t = 0;
+    Object.keys(state.packCounts).forEach(function (p) { t += state.packCounts[p]; });
+    return t;
+  }
+
+  // ---------- sidebar ----------
   function buildPackSidebar() {
     var packs = Object.keys(state.packCounts).sort();
     var frag = document.createDocumentFragment();
@@ -131,6 +159,21 @@
     syncSidebarActive();
   }
 
+  function refreshPackCounts() {
+    var pills = document.querySelectorAll('.pack-pill[data-pack]');
+    pills.forEach(function (pill) {
+      var p = pill.dataset.pack;
+      if (p === 'all') {
+        var t = totalForCurrentWeight();
+        var cnt = pill.querySelector('.pill-count');
+        if (cnt) cnt.textContent = formatNum(t);
+      } else {
+        var cnt = pill.querySelector('.pill-count');
+        if (cnt) cnt.textContent = formatNum(state.packCounts[p] || 0);
+      }
+    });
+  }
+
   function syncSidebarActive() {
     var pills = document.querySelectorAll('.pack-pill');
     for (var i = 0; i < pills.length; i++) {
@@ -145,9 +188,9 @@
     writeUrlState();
   }
 
-  // ---------- pack discovery cards (compact, below grid) ----------
+  // ---------- pack discovery ----------
   function buildPackDiscovery() {
-    var packs = Object.keys(state.packCounts).sort();
+    var packs = Object.keys(state.packCountsRaw).sort();
     var frag = document.createDocumentFragment();
     packs.forEach(function (p) {
       var card = document.createElement('a');
@@ -158,7 +201,7 @@
 
       var glyphs = document.createElement('div');
       glyphs.className = 'pack-card-glyphs';
-      var packIcons = state.iconsByPack[p] || [];
+      var packIcons = (state.iconsByPackByWeight[p] && state.iconsByPackByWeight[p][state.weight]) || [];
       var samples = pickSamples(packIcons, DISCOVERY_GLYPHS);
       samples.forEach(function (icon) {
         var i = document.createElement('i');
@@ -173,7 +216,7 @@
       name.textContent = prettyPack(p);
       var count = document.createElement('span');
       count.className = 'pack-card-count';
-      count.textContent = formatNum(state.packCounts[p]) + ' icons';
+      count.textContent = formatNum(state.packCountsRaw[p]) + ' icons';
       text.appendChild(name);
       text.appendChild(count);
 
@@ -192,7 +235,7 @@
     return out;
   }
 
-  // ---------- browse header + filter + render ----------
+  // ---------- filter + render ----------
   function updateBrowseHeader() {
     if (state.query.trim()) {
       els.browseTitle.textContent = 'Search: ' + state.query;
@@ -203,22 +246,41 @@
     }
   }
 
+  // Token-based search: query must be a prefix of one of the words in the
+  // icon's name (or pack's name). Avoids accidental matches like "cat" hitting
+  // "communication" via substring.
+  function matchesQuery(icon, q) {
+    if (!q) return true;
+    var nameTokens = icon.n.split(' ');
+    for (var i = 0; i < nameTokens.length; i++) {
+      if (nameTokens[i].indexOf(q) === 0) return true;
+    }
+    var packTokens = icon.p.split('-');
+    for (var i = 0; i < packTokens.length; i++) {
+      if (packTokens[i].indexOf(q) === 0) return true;
+    }
+    return false;
+  }
+
   function applyFilters() {
     var q = state.query.trim().toLowerCase();
     var pack = state.activePack;
+    var weightSuffix = WEIGHT_SUFFIXES[state.weight];
     var hits = [];
     for (var i = 0; i < state.icons.length; i++) {
       var icon = state.icons[i];
+      // Filter by weight (default behavior — gives consistent stroke per pack)
+      if (weightOf(icon.c) !== state.weight) continue;
       if (pack !== 'all' && icon.p !== pack) continue;
-      if (q && icon.n.indexOf(q) === -1 && icon.c.indexOf(q) === -1 && icon.p.indexOf(q) === -1) continue;
+      if (!matchesQuery(icon, q)) continue;
       hits.push(icon);
     }
     state.filtered = hits;
     state.rendered = 0;
     while (els.grid.firstChild) els.grid.removeChild(els.grid.firstChild);
     els.empty.hidden = hits.length > 0;
-    els.searchCount.textContent = q ? formatNum(hits.length) + ' / ' + formatNum(state.icons.length) : '';
-    els.browseCount.textContent = formatNum(hits.length) + (hits.length === 1 ? ' icon' : ' icons');
+    els.searchCount.textContent = q ? formatNum(hits.length) + ' / ' + formatNum(totalForCurrentWeight()) : '';
+    els.browseCount.textContent = formatNum(hits.length) + (hits.length === 1 ? ' design' : ' designs');
     renderMore();
   }
 
@@ -242,7 +304,7 @@
     els.loadMoreWrap.hidden = state.rendered >= state.filtered.length;
   }
 
-  // ---------- SVG markup builders ----------
+  // ---------- SVG ----------
   function buildSvgElement(icon, color, size) {
     var svg = document.createElementNS(SVG_NS, 'svg');
     svg.setAttribute('xmlns', SVG_NS);
@@ -270,17 +332,20 @@
     ].join('');
   }
 
-  // ---------- variants (-thin, -bold, -fill, -duotone) ----------
+  // ---------- variants (modal stroke toggle) ----------
   function findVariants(icon) {
-    var m = icon.c.match(/^(at-.+?)(-thin|-bold|-fill|-duotone|-solid|-line)?$/);
+    var m = icon.c.match(/^(at-.+?)(-thin|-bold)?$/);
     if (!m) return null;
     var root = m[1];
     var found = [];
-    var suffixes = ['', '-thin', '-bold', '-fill', '-duotone', '-solid', '-line'];
-    var labels = { '': 'Regular', '-thin': 'Thin', '-bold': 'Bold', '-fill': 'Fill', '-duotone': 'Duotone', '-solid': 'Solid', '-line': 'Line' };
+    var suffixes = [
+      { key: 'thin', sfx: '-thin', label: 'Thin' },
+      { key: 'regular', sfx: '', label: 'Regular' },
+      { key: 'bold', sfx: '-bold', label: 'Bold' }
+    ];
     suffixes.forEach(function (s) {
-      var ic = state.iconsByClass[root + s];
-      if (ic) found.push({ key: s || 'regular', label: labels[s], icon: ic });
+      var ic = state.iconsByClass[root + s.sfx];
+      if (ic) found.push({ key: s.key, label: s.label, icon: ic });
     });
     return found.length > 1 ? found : null;
   }
@@ -417,13 +482,58 @@
     setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
   }
 
+  // ---------- weight filter ----------
+  function setWeight(w) {
+    if (!WEIGHT_SUFFIXES.hasOwnProperty(w)) return;
+    state.weight = w;
+    var btns = document.querySelectorAll('.weight-btn');
+    for (var i = 0; i < btns.length; i++) {
+      var active = btns[i].dataset.weight === w;
+      if (active) btns[i].classList.add('is-active');
+      else btns[i].classList.remove('is-active');
+      btns[i].setAttribute('aria-checked', String(active));
+    }
+    computeRegularCounts();
+    refreshPackCounts();
+    applyFilters();
+    // Refresh discovery cards too — the sample icons should reflect the active weight
+    while (els.packDiscoveryGrid.firstChild) els.packDiscoveryGrid.removeChild(els.packDiscoveryGrid.firstChild);
+    buildPackDiscovery();
+  }
+
+  // ---------- topbar scroll behavior ----------
+  function bindScrollWatcher() {
+    var ticking = false;
+    function update() {
+      var scrolled = window.scrollY > SCROLL_COMPACT_AT;
+      if (scrolled) els.topbar.classList.add('is-compact');
+      else els.topbar.classList.remove('is-compact');
+      ticking = false;
+    }
+    window.addEventListener('scroll', function () {
+      if (!ticking) {
+        window.requestAnimationFrame(update);
+        ticking = true;
+      }
+    }, { passive: true });
+    update();
+  }
+
+  // Sync the two search inputs (hero + sticky topbar) — both update the same query
+  function syncSearchInputs(value, source) {
+    if (source !== 'hero') els.search.value = value;
+    if (source !== 'sticky') els.searchSticky.value = value;
+  }
+
   // ---------- events ----------
   function bindEvents() {
     var debounce;
-    els.search.addEventListener('input', function () {
+    function onSearchInput(e, source) {
       clearTimeout(debounce);
+      var val = e.target.value;
+      syncSearchInputs(val, source);
       debounce = setTimeout(function () {
-        state.query = els.search.value;
+        state.query = val;
         if (state.query.trim() && state.activePack !== 'all') {
           state.activePack = 'all';
           syncSidebarActive();
@@ -432,7 +542,9 @@
         updateBrowseHeader();
         applyFilters();
       }, DEBOUNCE_MS);
-    });
+    }
+    els.search.addEventListener('input', function (e) { onSearchInput(e, 'hero'); });
+    els.searchSticky.addEventListener('input', function (e) { onSearchInput(e, 'sticky'); });
 
     els.ctrlColor.addEventListener('input', function () {
       state.color = els.ctrlColor.value;
@@ -457,7 +569,12 @@
     });
 
     document.addEventListener('click', function (e) {
-      // Pack discovery card → filter the main grid + scroll up
+      var weightBtn = e.target.closest('.weight-btn');
+      if (weightBtn) {
+        setWeight(weightBtn.dataset.weight);
+        return;
+      }
+
       var packCard = e.target.closest('.pack-card');
       if (packCard) {
         if (e.button === 1 || e.metaKey || e.ctrlKey || e.shiftKey) return;
@@ -470,7 +587,6 @@
         return;
       }
 
-      // Sidebar pack pill → filter
       var pill = e.target.closest('.pack-pill');
       if (pill) {
         setActivePack(pill.dataset.pack);
@@ -479,7 +595,6 @@
         return;
       }
 
-      // Icon card → modal
       var iconBtn = e.target.closest('.icon-card');
       if (iconBtn) {
         var idx = parseInt(iconBtn.dataset.idx, 10);
@@ -487,7 +602,6 @@
         return;
       }
 
-      // Variant toggle in modal
       var variantBtn = e.target.closest('.variant-btn');
       if (variantBtn) {
         var newClass = variantBtn.dataset.variantClass;
@@ -504,13 +618,11 @@
         return;
       }
 
-      // Modal close
       if (e.target.closest('[data-modal-close]')) {
         closeModal();
         return;
       }
 
-      // Modal tab switch
       var tab = e.target.closest('.modal-tab');
       if (tab) {
         state.activeTab = tab.dataset.tab;
@@ -518,7 +630,6 @@
         return;
       }
 
-      // Generic copy buttons
       var copyBtn = e.target.closest('.btn-copy');
       if (copyBtn && copyBtn.dataset.copy) {
         var srcEl = document.getElementById(copyBtn.dataset.copy);
@@ -530,9 +641,10 @@
 
     document.addEventListener('keydown', function (e) {
       if (e.key === 'Escape' && !els.modal.hidden) closeModal();
-      if (e.key === '/' && document.activeElement !== els.search) {
+      if (e.key === '/' && document.activeElement !== els.search && document.activeElement !== els.searchSticky) {
         e.preventDefault();
-        els.search.focus();
+        var target = els.topbar.classList.contains('is-compact') ? els.searchSticky : els.search;
+        target.focus();
       }
     });
 
@@ -551,10 +663,14 @@
     parts.forEach(function (segment) {
       var pair = segment.split('/');
       if (pair[0] === 'pack' && pair[1]) {
-        if (state.packCounts[pair[1]] || pair[1] === 'all') state.activePack = pair[1];
+        if (state.packCountsRaw[pair[1]] || pair[1] === 'all') state.activePack = pair[1];
       } else if (pair[0] === 'search' && pair.length > 1) {
         state.query = decodeURIComponent(pair.slice(1).join('/'));
         els.search.value = state.query;
+        els.searchSticky.value = state.query;
+      } else if (pair[0] === 'weight' && WEIGHT_SUFFIXES.hasOwnProperty(pair[1])) {
+        state.weight = pair[1];
+        // Sync UI in next tick (after build)
       }
     });
     syncSidebarActive();
@@ -564,6 +680,7 @@
     var parts = [];
     if (state.activePack && state.activePack !== 'all') parts.push('pack/' + state.activePack);
     if (state.query) parts.push('search/' + encodeURIComponent(state.query));
+    if (state.weight !== 'regular') parts.push('weight/' + state.weight);
     var newHash = parts.length ? '#' + parts.join('&') : '';
     if (newHash) {
       if (location.hash !== newHash) history.replaceState(null, '', newHash);
