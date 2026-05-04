@@ -574,14 +574,15 @@ h1, h2, h3, h4, h5, h6 {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  height: 40px;
-  margin-bottom: 6px;
-}
-.framework-logo-mark {
-  width: 40px;
-  background: var(--lime);
+  width: 56px; height: 56px;
+  background: var(--bg-soft);
   border-radius: var(--radius-sm);
-  font-size: 20px;
+  margin-bottom: 8px;
+}
+.framework-logo svg { display: block; }
+.framework-logo-mark {
+  background: var(--lime);
+  font-size: 24px;
   color: var(--lime-fg);
 }
 .framework-card h3 {
@@ -645,6 +646,12 @@ h1, h2, h3, h4, h5, h6 {
   max-width: 920px;
   margin: 0 auto;
   text-align: center;
+}
+.vectoricons-logo {
+  display: block;
+  height: 40px;
+  width: auto;
+  margin: 0 auto 28px;
 }
 .vectoricons-section .section-eyebrow {
   color: var(--lime);
@@ -839,24 +846,16 @@ h1, h2, h3, h4, h5, h6 {
   position: relative;
   overflow: hidden;
 }
-.cta-band-card::before {
-  content: '';
+/* Faded illustrations background — shows the breadth of the GI library */
+.cta-band-bg {
   position: absolute;
-  top: -80px; right: -80px;
-  width: 240px; height: 240px;
-  background: var(--lime-dark);
-  border-radius: 50%;
-  opacity: 0.4;
-  pointer-events: none;
-}
-.cta-band-card::after {
-  content: '';
-  position: absolute;
-  bottom: -100px; left: -100px;
-  width: 280px; height: 280px;
-  background: var(--lime-dark);
-  border-radius: 50%;
-  opacity: 0.35;
+  inset: 0;
+  background-image: url('../img/illustrations-bg.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  opacity: 0.18;
+  mix-blend-mode: multiply;
   pointer-events: none;
 }
 .cta-band-inner {
@@ -867,6 +866,17 @@ h1, h2, h3, h4, h5, h6 {
   text-align: center;
   color: var(--lime-fg);
 }
+.cta-band-logo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 72px; height: 72px;
+  background: var(--text);
+  border-radius: var(--radius-card);
+  margin: 0 auto 20px;
+  box-shadow: var(--shadow-md);
+}
+.cta-band-logo img { display: block; }
 .cta-eyebrow {
   text-transform: uppercase;
   font-size: 11px;
