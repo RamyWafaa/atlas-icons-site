@@ -94,7 +94,10 @@ def build_manifest(packs):
                 "packs": pack_counts,
                 "packAdvance": pack_advance,
                 "total": len(icons),
-                "viewBox": "0 0 1024 1024",
+                # Wider than 1024x1024 so paths extending beyond declared
+                # ascent/descent (some go to Y=-85 in source coords, which
+                # maps to Y=1045 visual) don't get clipped at edges.
+                "viewBox": "-32 -32 1088 1088",
                 "flipTransform": "translate(0, 960) scale(1, -1)",
             },
             f,

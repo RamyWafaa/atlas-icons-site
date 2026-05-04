@@ -1,14 +1,17 @@
 /* Atlas Icons — search, filter, copy, modal with live SVG preview + download.
-   Vanilla JS, no innerHTML, no deps. */
+   Vanilla JS, no innerHTML. */
 (function () {
   'use strict';
 
   var DATA_URL = 'assets/data/icons.json';
   var PAGE_SIZE = 240;
   var DEBOUNCE_MS = 80;
-  var SAMPLE_PER_CATEGORY = 6;
-  var DEFAULT_VIEWBOX = '0 0 1024 1024';
-  var DEFAULT_FLIP = 'translate(0, 960) scale(1, -1)';
+  var DISCOVERY_GLYPHS = 4;
+  // viewBox is wider than 1024x1024 so paths that extend beyond the
+  // declared font ascent/descent (some go to Y=-85 in original coords,
+  // which maps to Y=1045 visual) don't get clipped at the bottom edge.
+  var SVG_VIEWBOX = '-32 -32 1088 1088';
+  var SVG_FLIP = 'translate(0, 960) scale(1, -1)';
   var SVG_NS = 'http://www.w3.org/2000/svg';
 
   var els = {
@@ -17,17 +20,16 @@
     countAll: document.getElementById('countAll'),
     totalCount: document.getElementById('totalCount'),
 
-    categoryGrid: document.getElementById('categoryGrid'),
-    filteredView: document.getElementById('filteredView'),
-    backBtn: document.getElementById('backBtn'),
-    filteredTitle: document.getElementById('filteredTitle'),
-    filteredCount: document.getElementById('filteredCount'),
+    browseTitle: document.getElementById('browseTitle'),
+    browseCount: document.getElementById('browseCount'),
 
     grid: document.getElementById('iconGrid'),
     empty: document.getElementById('emptyState'),
     packList: document.getElementById('packList'),
     loadMoreWrap: document.getElementById('loadMoreWrap'),
     loadMoreBtn: document.getElementById('loadMoreBtn'),
+
+    packDiscoveryGrid: document.getElementById('packDiscoveryGrid'),
 
     modal: document.getElementById('modalRoot'),
     modalSvgWrap: document.getElementById('modalSvgWrap'),
@@ -51,19 +53,17 @@
   var state = {
     icons: [],
     iconsByClass: {},
+    iconsByPack: {},
     packCounts: {},
     activePack: 'all',
     query: '',
     filtered: [],
     rendered: 0,
-    iconsByPack: {},
     activeTab: 'svg',
     activeIcon: null,
     color: '#0a0a0a',
     size: 64,
-    variants: [],   // computed per icon
-    viewBox: DEFAULT_VIEWBOX,
-    flip: DEFAULT_FLIP,
+    variants: [],
   };
 
   // ---------- bootstrap ----------
@@ -72,16 +72,21 @@
     .then(function (data) {
       state.icons = data.icons || [];
       state.packCounts = data.packs || {};
-      state.viewBox = data.viewBox || DEFAULT_VIEWBOX;
-      state.flip = data.flipTransform || DEFAULT_FLIP;
       var total = data.total || state.icons.length;
       els.countAll.textContent = formatNum(total);
       els.totalCount.textContent = formatNum(total);
       indexIcons();
       buildPackSidebar();
-      buildCategoryGrid();
+      buildPackDiscovery();
       readUrlState();
-      route();
+      // Per-pack pages set window.__INITIAL_PACK before app.js loads.
+      if (typeof window !== 'undefined' && window.__INITIAL_PACK
+          && state.packCounts[window.__INITIAL_PACK]) {
+        state.activePack = window.__INITIAL_PACK;
+        syncSidebarActive();
+      }
+      updateBrowseHeader();
+      applyFilters();
       bindEvents();
     })
     .catch(function (e) {
@@ -90,8 +95,7 @@
       msg.style.color = '#888';
       msg.style.textAlign = 'center';
       msg.textContent = 'Could not load icons. Refresh the page.';
-      els.categoryGrid.appendChild(msg);
-      els.categoryGrid.hidden = false;
+      els.grid.appendChild(msg);
       console.error(e);
     });
 
@@ -104,87 +108,9 @@
       state.iconsByPack[icon.p].push(icon);
       state.iconsByClass[icon.c] = icon;
     }
-    // Per-pack pages set window.__INITIAL_PACK in inline script before app.js loads.
-    // This lets each /pack/<name>/ HTML page boot directly into its filter.
-    if (typeof window !== 'undefined' && window.__INITIAL_PACK
-        && state.packCounts[window.__INITIAL_PACK]) {
-      state.activePack = window.__INITIAL_PACK;
-    }
   }
 
-  // ---------- view router ----------
-  function route() {
-    var showFiltered = state.activePack !== 'all' || state.query.trim() !== '';
-    els.categoryGrid.hidden = showFiltered;
-    els.filteredView.hidden = !showFiltered;
-    if (showFiltered) {
-      updateFilteredHeader();
-      applyFilters();
-    }
-  }
-
-  function updateFilteredHeader() {
-    if (state.query.trim()) {
-      els.filteredTitle.textContent = 'Search: ' + state.query;
-    } else if (state.activePack !== 'all') {
-      els.filteredTitle.textContent = prettyPack(state.activePack);
-    } else {
-      els.filteredTitle.textContent = 'All icons';
-    }
-  }
-
-  // ---------- category preview cards ----------
-  // Rendered as <a href="/pack/<name>/"> (not <button>) so search engines
-  // can crawl every pack page. Click handler intercepts to do in-page
-  // filter without a full reload, but right-click / Cmd+Click / Google
-  // crawler all see real anchors.
-  function buildCategoryGrid() {
-    var packs = Object.keys(state.packCounts).sort();
-    var frag = document.createDocumentFragment();
-    packs.forEach(function (p) {
-      var card = document.createElement('a');
-      card.className = 'category-card';
-      card.href = '/pack/' + p + '/';
-      card.dataset.pack = p;
-      card.setAttribute('aria-label', 'Browse ' + prettyPack(p) + ' pack');
-
-      var head = document.createElement('div');
-      head.className = 'category-card-head';
-      var name = document.createElement('h3');
-      name.className = 'category-card-name';
-      name.textContent = prettyPack(p);
-      var count = document.createElement('span');
-      count.className = 'category-card-count';
-      count.textContent = formatNum(state.packCounts[p]);
-      head.appendChild(name);
-      head.appendChild(count);
-
-      var iconsRow = document.createElement('div');
-      iconsRow.className = 'category-card-icons';
-      var packIcons = state.iconsByPack[p] || [];
-      var samples = pickSamples(packIcons, SAMPLE_PER_CATEGORY);
-      samples.forEach(function (icon) {
-        var i = document.createElement('i');
-        i.className = icon.c;
-        iconsRow.appendChild(i);
-      });
-
-      card.appendChild(head);
-      card.appendChild(iconsRow);
-      frag.appendChild(card);
-    });
-    els.categoryGrid.appendChild(frag);
-  }
-
-  function pickSamples(arr, n) {
-    if (arr.length <= n) return arr.slice();
-    var step = Math.floor(arr.length / n);
-    var out = [];
-    for (var i = 0; i < n; i++) out.push(arr[i * step]);
-    return out;
-  }
-
-  // ---------- sidebar ----------
+  // ---------- sidebar (always visible) ----------
   function buildPackSidebar() {
     var packs = Object.keys(state.packCounts).sort();
     var frag = document.createDocumentFragment();
@@ -219,7 +145,64 @@
     writeUrlState();
   }
 
-  // ---------- filter + render ----------
+  // ---------- pack discovery cards (compact, below grid) ----------
+  function buildPackDiscovery() {
+    var packs = Object.keys(state.packCounts).sort();
+    var frag = document.createDocumentFragment();
+    packs.forEach(function (p) {
+      var card = document.createElement('a');
+      card.className = 'pack-card';
+      card.href = '/pack/' + p + '/';
+      card.dataset.pack = p;
+      card.setAttribute('aria-label', 'Browse ' + prettyPack(p) + ' pack');
+
+      var glyphs = document.createElement('div');
+      glyphs.className = 'pack-card-glyphs';
+      var packIcons = state.iconsByPack[p] || [];
+      var samples = pickSamples(packIcons, DISCOVERY_GLYPHS);
+      samples.forEach(function (icon) {
+        var i = document.createElement('i');
+        i.className = icon.c;
+        glyphs.appendChild(i);
+      });
+
+      var text = document.createElement('div');
+      text.className = 'pack-card-text';
+      var name = document.createElement('span');
+      name.className = 'pack-card-name';
+      name.textContent = prettyPack(p);
+      var count = document.createElement('span');
+      count.className = 'pack-card-count';
+      count.textContent = formatNum(state.packCounts[p]) + ' icons';
+      text.appendChild(name);
+      text.appendChild(count);
+
+      card.appendChild(glyphs);
+      card.appendChild(text);
+      frag.appendChild(card);
+    });
+    els.packDiscoveryGrid.appendChild(frag);
+  }
+
+  function pickSamples(arr, n) {
+    if (arr.length <= n) return arr.slice();
+    var step = Math.floor(arr.length / n);
+    var out = [];
+    for (var i = 0; i < n; i++) out.push(arr[i * step]);
+    return out;
+  }
+
+  // ---------- browse header + filter + render ----------
+  function updateBrowseHeader() {
+    if (state.query.trim()) {
+      els.browseTitle.textContent = 'Search: ' + state.query;
+    } else if (state.activePack !== 'all') {
+      els.browseTitle.textContent = prettyPack(state.activePack);
+    } else {
+      els.browseTitle.textContent = 'All icons';
+    }
+  }
+
   function applyFilters() {
     var q = state.query.trim().toLowerCase();
     var pack = state.activePack;
@@ -235,7 +218,7 @@
     while (els.grid.firstChild) els.grid.removeChild(els.grid.firstChild);
     els.empty.hidden = hits.length > 0;
     els.searchCount.textContent = q ? formatNum(hits.length) + ' / ' + formatNum(state.icons.length) : '';
-    els.filteredCount.textContent = formatNum(hits.length) + (hits.length === 1 ? ' icon' : ' icons');
+    els.browseCount.textContent = formatNum(hits.length) + (hits.length === 1 ? ' icon' : ' icons');
     renderMore();
   }
 
@@ -247,14 +230,11 @@
       var card = document.createElement('button');
       card.className = 'icon-card';
       card.dataset.idx = String(i);
+      card.title = icon.c;
       card.setAttribute('aria-label', icon.n + ' icon, ' + icon.p + ' pack');
       var glyph = document.createElement('i');
       glyph.className = icon.c;
       card.appendChild(glyph);
-      var name = document.createElement('span');
-      name.className = 'card-name';
-      name.textContent = icon.c;
-      card.appendChild(name);
       frag.appendChild(card);
     }
     els.grid.appendChild(frag);
@@ -266,12 +246,12 @@
   function buildSvgElement(icon, color, size) {
     var svg = document.createElementNS(SVG_NS, 'svg');
     svg.setAttribute('xmlns', SVG_NS);
-    svg.setAttribute('viewBox', state.viewBox);
+    svg.setAttribute('viewBox', SVG_VIEWBOX);
     svg.setAttribute('width', String(size));
     svg.setAttribute('height', String(size));
     svg.setAttribute('fill', color);
     var g = document.createElementNS(SVG_NS, 'g');
-    g.setAttribute('transform', state.flip);
+    g.setAttribute('transform', SVG_FLIP);
     var path = document.createElementNS(SVG_NS, 'path');
     path.setAttribute('d', icon.d || '');
     g.appendChild(path);
@@ -281,9 +261,9 @@
 
   function buildSvgString(icon, color, size) {
     return [
-      '<svg xmlns="http://www.w3.org/2000/svg" viewBox="' + state.viewBox + '"',
+      '<svg xmlns="http://www.w3.org/2000/svg" viewBox="' + SVG_VIEWBOX + '"',
       ' width="' + size + '" height="' + size + '" fill="' + color + '">',
-      '<g transform="' + state.flip + '">',
+      '<g transform="' + SVG_FLIP + '">',
       '<path d="' + (icon.d || '') + '"/>',
       '</g>',
       '</svg>'
@@ -292,27 +272,15 @@
 
   // ---------- variants (-thin, -bold, -fill, -duotone) ----------
   function findVariants(icon) {
-    var classWithPrefix = icon.c;
-    var m = classWithPrefix.match(/^(at-.+?)(-thin|-bold|-fill|-duotone|-solid|-line)?$/);
-    if (!m) return [{ key: 'default', label: 'Default', icon: icon }];
+    var m = icon.c.match(/^(at-.+?)(-thin|-bold|-fill|-duotone|-solid|-line)?$/);
+    if (!m) return null;
     var root = m[1];
     var found = [];
-    var suffixes = ['-thin', '', '-bold', '-fill', '-duotone', '-solid', '-line'];
+    var suffixes = ['', '-thin', '-bold', '-fill', '-duotone', '-solid', '-line'];
+    var labels = { '': 'Regular', '-thin': 'Thin', '-bold': 'Bold', '-fill': 'Fill', '-duotone': 'Duotone', '-solid': 'Solid', '-line': 'Line' };
     suffixes.forEach(function (s) {
-      var candidateClass = root + s;
-      var ic = state.iconsByClass[candidateClass];
-      if (ic) {
-        var label;
-        if (s === '-thin') label = 'Thin';
-        else if (s === '') label = 'Regular';
-        else if (s === '-bold') label = 'Bold';
-        else if (s === '-fill') label = 'Fill';
-        else if (s === '-duotone') label = 'Duotone';
-        else if (s === '-solid') label = 'Solid';
-        else if (s === '-line') label = 'Line';
-        else label = s;
-        found.push({ key: s || 'regular', label: label, icon: ic });
-      }
+      var ic = state.iconsByClass[root + s];
+      if (ic) found.push({ key: s || 'regular', label: labels[s], icon: ic });
     });
     return found.length > 1 ? found : null;
   }
@@ -342,10 +310,8 @@
     els.mPack.textContent = prettyPack(icon.p);
     els.sClass.textContent = icon.c;
     els.sUnicode.textContent = '\\' + icon.u;
-    els.dlPackZip.href =
-      'https://github.com/Vectopus/Atlas-icons-font/archive/refs/heads/main.zip';
-    els.viewPackGh.href =
-      'https://github.com/Vectopus/Atlas-icons-font/tree/main/packs/' + icon.p;
+    els.dlPackZip.href = 'https://github.com/Vectopus/Atlas-icons-font/archive/refs/heads/main.zip';
+    els.viewPackGh.href = 'https://github.com/Vectopus/Atlas-icons-font/tree/main/packs/' + icon.p;
 
     var variants = findVariants(icon);
     if (variants && variants.length > 1) {
@@ -393,7 +359,7 @@
       case 'vue':
         return "<template>\n  <" + pascalName + " :size=\"" + state.size + "\" color=\"" + state.color + "\" />\n</template>\n\n<script setup>\nimport { " + pascalName + " } from '@vectoricons/atlas-icons-vue';\n</script>";
       case 'flutter':
-        return "import 'package:atlas_icons/atlas_icons.dart';\n\nIcon(AtlasIcons." + snakeName + ", size: " + state.size + ", color: Color(0xFF" + state.color.replace('#', '').toUpperCase() + "))";
+        return "import 'package:atlas_icons/atlas_icons.dart';\n\nIcon(AtlasIcons." + snakeName + ", size: " + state.size + ",\n  color: Color(0xFF" + state.color.replace('#', '').toUpperCase() + "))";
       case 'reactnative':
         return "import { " + pascalName + " } from '@vectoricons/atlas-icons-react-native';\n\n<" + pascalName + ' size={' + state.size + '} color="' + state.color + '" />';
       case 'html':
@@ -463,7 +429,8 @@
           syncSidebarActive();
         }
         writeUrlState();
-        route();
+        updateBrowseHeader();
+        applyFilters();
       }, DEBOUNCE_MS);
     });
 
@@ -490,41 +457,37 @@
     });
 
     document.addEventListener('click', function (e) {
-      var catCard = e.target.closest('.category-card');
-      if (catCard) {
-        // Honor real anchor for middle-click, ctrl/cmd-click, right-click,
-        // shift-click — those should navigate to /pack/<name>/ as a real page.
+      // Pack discovery card → filter the main grid + scroll up
+      var packCard = e.target.closest('.pack-card');
+      if (packCard) {
         if (e.button === 1 || e.metaKey || e.ctrlKey || e.shiftKey) return;
         e.preventDefault();
-        setActivePack(catCard.dataset.pack);
-        route();
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        setActivePack(packCard.dataset.pack);
+        updateBrowseHeader();
+        applyFilters();
+        var browseEl = document.getElementById('browse');
+        if (browseEl) browseEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
         return;
       }
 
-      if (e.target.closest('#backBtn')) {
-        setActivePack('all');
-        state.query = '';
-        els.search.value = '';
-        writeUrlState();
-        route();
-        return;
-      }
-
+      // Sidebar pack pill → filter
       var pill = e.target.closest('.pack-pill');
       if (pill) {
         setActivePack(pill.dataset.pack);
-        route();
+        updateBrowseHeader();
+        applyFilters();
         return;
       }
 
-      var card = e.target.closest('.icon-card');
-      if (card) {
-        var idx = parseInt(card.dataset.idx, 10);
+      // Icon card → modal
+      var iconBtn = e.target.closest('.icon-card');
+      if (iconBtn) {
+        var idx = parseInt(iconBtn.dataset.idx, 10);
         openModal(state.filtered[idx]);
         return;
       }
 
+      // Variant toggle in modal
       var variantBtn = e.target.closest('.variant-btn');
       if (variantBtn) {
         var newClass = variantBtn.dataset.variantClass;
@@ -541,11 +504,13 @@
         return;
       }
 
+      // Modal close
       if (e.target.closest('[data-modal-close]')) {
         closeModal();
         return;
       }
 
+      // Modal tab switch
       var tab = e.target.closest('.modal-tab');
       if (tab) {
         state.activeTab = tab.dataset.tab;
@@ -553,10 +518,10 @@
         return;
       }
 
+      // Generic copy buttons
       var copyBtn = e.target.closest('.btn-copy');
-      if (copyBtn) {
-        var srcId = copyBtn.dataset.copy;
-        var srcEl = document.getElementById(srcId);
+      if (copyBtn && copyBtn.dataset.copy) {
+        var srcEl = document.getElementById(copyBtn.dataset.copy);
         if (srcEl) copyText(srcEl.textContent, copyBtn);
       }
     });
@@ -573,7 +538,8 @@
 
     window.addEventListener('hashchange', function () {
       readUrlState();
-      route();
+      updateBrowseHeader();
+      applyFilters();
     });
   }
 

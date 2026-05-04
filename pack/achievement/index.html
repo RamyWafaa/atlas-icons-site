@@ -44,12 +44,11 @@
 </head>
 <body>
   <header class="topbar">
-    <a class="topbar-brand" href="#">
+    <a class="topbar-brand" href="/">
       <span class="topbar-mark"><i class="at-artboards"></i></span>
       <span class="topbar-name">Atlas Icons</span>
     </a>
     <nav class="topbar-nav">
-      <a href="#install">Install</a>
       <a href="#frameworks">Frameworks</a>
       <a href="https://vectoricons.net" target="_blank" rel="noopener noreferrer">Vectoricons.net</a>
       <a href="https://github.com/Vectopus/Atlas-icons-font" target="_blank" rel="noopener noreferrer" class="topbar-cta">GitHub →</a>
@@ -64,10 +63,9 @@
     </p>
     <h1 class="hero-headline">
       <span id="totalCount">7,980</span> <span class="hero-em">hand-crafted</span>
-      <br>
       icons. <span class="hero-strong">Free forever.</span>
     </h1>
-    <p class="hero-sub">An open-source library across 41 packs. Drop into any project as a webfont, or use the React, Vue, Flutter, and React Native packages. MIT licensed, made for designers and developers.</p>
+    <p class="hero-sub">An open-source library across 41 packs. Drop into any project as a webfont, or use the React, Vue, Flutter, and React Native packages. MIT licensed.</p>
 
     <div class="hero-search-wrap">
       <input
@@ -79,23 +77,15 @@
         aria-label="Search icons">
       <span class="search-count" id="searchCount"></span>
     </div>
-
-    <div class="hero-install" id="install">
-      <code class="install-snippet" id="installSnippet">npm install @vectoricons/atlas-icons</code>
-      <button class="btn-copy install-copy" data-copy="installSnippet" aria-label="Copy install command">Copy</button>
-    </div>
   </section>
 
   <main id="content">
-    <!-- View 1: Category preview cards (default) -->
-    <section class="category-grid" id="categoryGrid" hidden></section>
-
-    <!-- View 2: Filtered icons (when a pack is selected or search active) -->
-    <section class="filtered-view" id="filteredView" hidden>
-      <div class="filtered-toolbar">
-        <button class="btn-back" id="backBtn">← All packs</button>
-        <h2 class="filtered-title" id="filteredTitle"></h2>
-        <p class="filtered-count" id="filteredCount"></p>
+    <!-- Browse: sidebar + grid is the DEFAULT view from page load.
+         Defaults to "All packs" so visitors see the whole library on landing. -->
+    <section class="browse" id="browse">
+      <div class="browse-toolbar">
+        <h2 class="browse-title" id="browseTitle">All icons</h2>
+        <p class="browse-count" id="browseCount">7,980 icons</p>
       </div>
       <aside class="sidebar" aria-label="Icon packs">
         <button class="pack-pill is-active" data-pack="all">All packs <span class="pill-count" id="countAll">7,980</span></button>
@@ -110,6 +100,13 @@
           <button id="loadMoreBtn" class="btn-secondary">Load more</button>
         </div>
       </div>
+    </section>
+
+    <!-- Compact pack discovery section, shown below the grid. Less prominent than v3 — these are quick navigation chips, not the main attraction. -->
+    <section class="pack-discovery">
+      <p class="section-eyebrow">Browse by pack</p>
+      <h2 class="section-title">All <span class="hero-em">41 packs</span></h2>
+      <div class="pack-discovery-grid" id="packDiscoveryGrid"></div>
     </section>
   </main>
 
@@ -169,13 +166,9 @@
     </div>
   </section>
 
-  <!-- SEO: crawlable list of every pack so search engines discover all 41 URLs
-       from the homepage. Build script (scripts/build-manifest.py) keeps this
-       in sync with the actual pack list. Visible to users as a compact pack
-       index above the footer. -->
+  <!-- SEO: crawlable list of every pack -->
   <nav class="all-packs" aria-label="All Atlas Icons packs">
-    <h2 class="all-packs-title">All <span class="hero-em">41</span> packs</h2>
-    <p class="all-packs-sub">Every pack in the Atlas Icons library.</p>
+    <h2 class="all-packs-title">Every pack &middot; <span class="hero-em">A–Z</span></h2>
     <ul class="all-packs-list" id="allPacksList">
       <!-- BEGIN PACK_LINKS -->
       <li><a href="/pack/achievement/">Achievement <span>63</span></a></li>
@@ -259,27 +252,30 @@
     <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
       <button class="modal-close" data-modal-close aria-label="Close">&times;</button>
 
-      <div class="modal-preview-row">
+      <div class="modal-head">
         <div class="modal-preview" id="modalPreviewBox">
           <span id="modalSvgWrap" class="modal-svg-wrap"></span>
         </div>
         <div class="modal-meta">
           <h2 id="modalTitle" class="modal-title">icon-name</h2>
           <p class="modal-pack">in <span id="modalPack">pack</span> pack</p>
-          <div class="modal-controls">
-            <label class="ctrl">
-              <span class="ctrl-label">Color</span>
-              <input id="ctrlColor" type="color" value="#0a0a0a">
-            </label>
-            <label class="ctrl">
-              <span class="ctrl-label">Size <span id="ctrlSizeVal">64</span>px</span>
-              <input id="ctrlSize" type="range" min="16" max="160" step="4" value="64">
-            </label>
-            <div class="ctrl ctrl-variants" id="ctrlVariants" hidden>
-              <span class="ctrl-label">Stroke</span>
-              <div class="variants-row" id="variantsRow"></div>
-            </div>
-          </div>
+        </div>
+      </div>
+
+      <div class="modal-controls-row">
+        <label class="ctrl">
+          <span class="ctrl-label">Color</span>
+          <span class="ctrl-color-wrap">
+            <input id="ctrlColor" type="color" value="#0a0a0a">
+          </span>
+        </label>
+        <label class="ctrl ctrl-size">
+          <span class="ctrl-label">Size <strong id="ctrlSizeVal">64</strong>px</span>
+          <input id="ctrlSize" type="range" min="16" max="160" step="4" value="64">
+        </label>
+        <div class="ctrl ctrl-variants" id="ctrlVariants" hidden>
+          <span class="ctrl-label">Stroke</span>
+          <div class="variants-row" id="variantsRow"></div>
         </div>
       </div>
 
@@ -297,27 +293,16 @@
         <button class="modal-tab" data-tab="reactnative" role="tab">RN</button>
       </div>
 
-      <div class="copy-row">
+      <div class="snippet-box">
         <code id="snippetCode" class="snippet snippet-block"></code>
         <button class="btn-copy snippet-copy" data-copy="snippetCode">Copy</button>
       </div>
 
-      <div class="modal-grid-2">
-        <div class="copy-row copy-row-inline">
-          <label>Class</label>
-          <code id="snippetClass" class="snippet"></code>
-          <button class="btn-copy" data-copy="snippetClass">Copy</button>
-        </div>
-        <div class="copy-row copy-row-inline">
-          <label>Unicode</label>
-          <code id="snippetUnicode" class="snippet"></code>
-          <button class="btn-copy" data-copy="snippetUnicode">Copy</button>
-        </div>
-      </div>
-
-      <div class="modal-actions modal-actions-secondary">
-        <a id="downloadPackZip" class="btn-secondary" href="#" target="_blank" rel="noopener noreferrer">Download whole pack (ZIP)</a>
-        <a id="viewPackOnGithub" class="btn-link" href="#" target="_blank" rel="noopener noreferrer">View on GitHub →</a>
+      <div class="modal-meta-row">
+        <span class="meta-chip"><span class="meta-key">class</span> <code id="snippetClass">at-icon-name</code></span>
+        <span class="meta-chip"><span class="meta-key">unicode</span> <code id="snippetUnicode">\\e000</code></span>
+        <a id="downloadPackZip" class="meta-link" href="#" target="_blank" rel="noopener noreferrer">Pack ZIP</a>
+        <a id="viewPackOnGithub" class="meta-link" href="#" target="_blank" rel="noopener noreferrer">GitHub →</a>
       </div>
     </div>
   </div>
