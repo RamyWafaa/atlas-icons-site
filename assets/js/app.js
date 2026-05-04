@@ -93,6 +93,7 @@
       applyFilters();
       bindEvents();
       bindScrollWatcher();
+      bindRevealAnimations();
     })
     .catch(function (e) {
       var msg = document.createElement('p');
@@ -526,6 +527,32 @@
       }
     }, { passive: true });
     update();
+  }
+
+  // ---------- reveal-on-scroll for sections (premium feel) ----------
+  function bindRevealAnimations() {
+    if (!('IntersectionObserver' in window)) {
+      // Older browsers: just show everything, no animation
+      var fallback = document.querySelectorAll('.reveal');
+      for (var i = 0; i < fallback.length; i++) fallback[i].classList.add('is-visible');
+      return;
+    }
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('is-visible');
+          io.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+
+    var targets = document.querySelectorAll(
+      '.pack-discovery, .frameworks-section, .vectoricons-section, .cta-band, .faq, .contact, .all-packs'
+    );
+    for (var i = 0; i < targets.length; i++) {
+      targets[i].classList.add('reveal');
+      io.observe(targets[i]);
+    }
   }
 
   // Sync the two search inputs (hero + sticky topbar) — both update the same query

@@ -44,6 +44,15 @@
 
 * { box-sizing: border-box; }
 html, body { margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
 body {
   font-family: var(--font-body);
   font-size: 15px;
@@ -125,7 +134,9 @@ h1, h2, h3, h4, h5, h6 {
 }
 .topbar-cta:hover { opacity: 0.85 !important; }
 
-/* Sticky search + weight filter appear when scrolled past the hero */
+/* Sticky search + weight filter appear when scrolled past the hero.
+   When they appear, the inline weight filter in the browse toolbar HIDES
+   so the same control isn't duplicated on screen. */
 .topbar-row-search {
   margin-top: 12px;
   display: none;
@@ -137,6 +148,10 @@ h1, h2, h3, h4, h5, h6 {
   margin-right: auto;
 }
 .topbar.is-compact .topbar-row-search { display: flex; }
+.topbar.is-compact ~ * .browse-toolbar > .weight-filter:not(.weight-filter-sticky) {
+  visibility: hidden;
+  pointer-events: none;
+}
 .weight-filter-sticky { flex-shrink: 0; padding: 2px; }
 .weight-filter-sticky .weight-btn { padding: 5px 10px; font-size: 12px; }
 #searchInputSticky {
@@ -185,7 +200,47 @@ h1, h2, h3, h4, h5, h6 {
   width: 7px; height: 7px;
   background: var(--lime);
   border-radius: 50%;
+  position: relative;
 }
+.hero-eyebrow .dot::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: var(--lime);
+  animation: dot-pulse 2.4s ease-out infinite;
+  pointer-events: none;
+}
+@keyframes dot-pulse {
+  0% { transform: scale(1); opacity: 0.6; }
+  70% { transform: scale(2.6); opacity: 0; }
+  100% { transform: scale(2.6); opacity: 0; }
+}
+
+/* Reveal-on-scroll for major sections — adds polish without being noisy */
+.reveal {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.6s ease-out, transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity, transform;
+}
+.reveal.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Stagger the icon-card entrances on initial render and weight switch */
+@keyframes card-in {
+  from { opacity: 0; transform: scale(0.95); }
+  to   { opacity: 1; transform: scale(1); }
+}
+.icon-card { animation: card-in 0.32s cubic-bezier(0.16, 1, 0.3, 1) both; }
+
+/* Lime hover ripple on the framework logo tile */
+.framework-card .framework-logo {
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), background-color var(--transition);
+}
+.framework-card:hover .framework-logo { transform: scale(1.08) rotate(-3deg); }
 .hero-headline {
   font-size: clamp(36px, 5.5vw, 60px);
   font-weight: 800;
@@ -1312,26 +1367,57 @@ h1, h2, h3, h4, h5, h6 {
 .meta-link:hover { color: var(--text); opacity: 1; text-decoration: underline; text-underline-offset: 3px; }
 .meta-link + .meta-link { margin-left: 12px; }
 
-/* ---------- Footer (centered, matches the rest of the site) ---------- */
+/* ---------- Footer (brand on top, 3 link cols centered below) ---------- */
 .site-footer {
-  padding: 64px 32px 28px;
+  padding: 72px 32px 28px;
   background: var(--bg-soft);
   border-top: 1px solid var(--border);
   text-align: center;
 }
-.footer-cols {
-  max-width: 1080px;
+.footer-brand {
+  max-width: 520px;
+  margin: 0 auto 48px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+.footer-mark {
+  display: inline-block;
+  width: 52px; height: 52px;
+  margin-bottom: 16px;
+}
+.footer-name {
+  font-family: var(--font-display);
+  margin: 0 0 6px;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+}
+.footer-tagline {
+  margin: 0;
+  font-size: 14px;
+  color: var(--text-muted);
+}
+.footer-credit {
+  margin: 14px 0 0;
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.55;
+}
+.footer-credit a { color: var(--text); font-weight: 500; }
+.footer-links {
+  max-width: 720px;
   margin: 0 auto 40px;
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 36px;
-  justify-items: center;
+  text-align: center;
 }
 .footer-col {
   display: flex;
   flex-direction: column;
   align-items: center;
-  text-align: center;
 }
 .footer-col h4 {
   font-size: 13px;
@@ -1341,37 +1427,11 @@ h1, h2, h3, h4, h5, h6 {
 }
 .footer-col a {
   display: block;
-  margin-bottom: 8px;
+  margin-bottom: 9px;
   font-size: 13px;
   color: var(--text-muted);
 }
 .footer-col a:hover { color: var(--text); opacity: 1; }
-.footer-mark {
-  display: inline-block;
-  width: 44px; height: 44px;
-  margin-bottom: 14px;
-}
-.footer-name {
-  font-family: var(--font-display);
-  margin: 0 0 4px;
-  font-size: 16px;
-  font-weight: 700;
-  letter-spacing: -0.01em;
-}
-.footer-tagline {
-  margin: 0 0 8px;
-  font-size: 13px;
-  color: var(--text-muted);
-  max-width: 280px;
-}
-.footer-credit {
-  margin: 12px 0 0;
-  font-size: 12px;
-  color: var(--text-muted);
-  line-height: 1.55;
-  max-width: 280px;
-}
-.footer-credit a { display: inline; margin: 0; color: var(--text); font-weight: 500; }
 .footer-meta {
   max-width: 1080px;
   margin: 0 auto;
