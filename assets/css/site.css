@@ -615,6 +615,216 @@ h1, h2, h3, h4, h5, h6 {
   white-space: nowrap;
 }
 
+/* ---------- Vectoricons.net showcase ---------- */
+.vectoricons-section {
+  background: var(--bg);
+  padding: 56px 32px;
+}
+.vectoricons-card {
+  max-width: var(--max-w);
+  margin: 0 auto;
+  background: linear-gradient(160deg, #0a0a0a 0%, #18181b 100%);
+  color: var(--bg);
+  border-radius: 28px;
+  padding: 64px 48px;
+  position: relative;
+  overflow: hidden;
+}
+.vectoricons-card::before {
+  content: '';
+  position: absolute;
+  top: -100px; right: -80px;
+  width: 320px; height: 320px;
+  background: radial-gradient(circle, var(--lime) 0%, transparent 70%);
+  opacity: 0.18;
+  pointer-events: none;
+}
+.vectoricons-content {
+  position: relative;
+  z-index: 1;
+  max-width: 920px;
+  margin: 0 auto;
+  text-align: center;
+}
+.vectoricons-section .section-eyebrow {
+  color: var(--lime);
+  margin-bottom: 14px;
+}
+.vectoricons-headline {
+  font-family: var(--font-display);
+  font-size: clamp(28px, 4vw, 42px);
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -0.025em;
+  margin: 0 0 16px;
+  color: var(--bg);
+}
+.vectoricons-headline .hero-strong { color: var(--lime); }
+.vectoricons-headline .hero-strong::after { display: none; }
+.vectoricons-sub {
+  margin: 0 auto 36px;
+  font-size: 16px;
+  max-width: 720px;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.75);
+}
+.vectoricons-features {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 18px;
+  margin: 0 0 32px;
+  text-align: left;
+}
+.vectoricons-feature {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 20px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-card);
+  transition: border-color var(--transition), background-color var(--transition);
+}
+.vectoricons-feature:hover {
+  border-color: var(--lime);
+  background: rgba(204, 234, 74, 0.06);
+}
+.vectoricons-feature-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px; height: 36px;
+  background: var(--lime);
+  color: var(--lime-fg);
+  border-radius: var(--radius-sm);
+  font-size: 18px;
+  margin-bottom: 4px;
+}
+.vectoricons-feature strong {
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--bg);
+}
+.vectoricons-feature span:not(.vectoricons-feature-icon) {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.6);
+  line-height: 1.5;
+}
+.vectoricons-pricing {
+  margin: 0 0 24px;
+}
+.vectoricons-pricing-tag {
+  display: inline-block;
+  padding: 8px 16px;
+  background: rgba(204, 234, 74, 0.12);
+  border: 1px solid rgba(204, 234, 74, 0.3);
+  color: var(--lime);
+  border-radius: var(--radius-pill);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+.vectoricons-actions {
+  display: inline-flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.vectoricons-actions .btn-primary {
+  background: var(--lime);
+  color: var(--lime-fg);
+  border-color: var(--lime);
+}
+.vectoricons-actions .btn-primary:hover { opacity: 0.9; }
+.vectoricons-actions .btn-secondary {
+  background: transparent;
+  color: var(--bg);
+  border-color: rgba(255, 255, 255, 0.4);
+}
+.vectoricons-actions .btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: var(--bg);
+  opacity: 1;
+}
+
+/* ---------- Contact ---------- */
+.contact {
+  background: var(--bg-soft);
+  padding: 80px 32px;
+}
+.contact-card {
+  max-width: 720px;
+  margin: 0 auto;
+  text-align: center;
+}
+.contact-headline {
+  font-family: var(--font-display);
+  font-size: clamp(28px, 4vw, 40px);
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -0.025em;
+  margin: 0 0 14px;
+}
+.contact-sub {
+  margin: 0 auto 28px;
+  color: var(--text-muted);
+  font-size: 16px;
+  max-width: 540px;
+}
+.contact-email {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+  padding: 18px 24px;
+  background: var(--bg);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-pill);
+  color: var(--text);
+  text-decoration: none;
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 600;
+  transition: border-color var(--transition), box-shadow var(--transition), transform var(--transition);
+  box-shadow: var(--shadow-xs);
+}
+.contact-email:hover {
+  border-color: var(--text);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
+  opacity: 1;
+  text-decoration: none;
+}
+.contact-email-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px; height: 36px;
+  background: var(--lime);
+  color: var(--lime-fg);
+  border-radius: var(--radius-sm);
+  font-size: 18px;
+}
+.contact-email-cta {
+  font-size: 13px;
+  color: var(--text-muted);
+  font-weight: 500;
+  margin-left: 8px;
+  padding-left: 16px;
+  border-left: 1px solid var(--border);
+}
+.contact-other {
+  margin: 24px 0 0;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+.contact-other a {
+  color: var(--text);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
 /* ---------- CTA Band (rounded lime card) ---------- */
 .cta-band {
   background: var(--bg);
@@ -1160,7 +1370,13 @@ h1, h2, h3, h4, h5, h6 {
   .sidebar { position: static; max-height: 240px; }
   .pack-list { flex-direction: row; flex-wrap: wrap; gap: 4px; }
   .pack-pill { width: auto; }
-  .pack-discovery, .frameworks-section, .cta-band, .faq { padding: 48px 16px; }
+  .pack-discovery, .frameworks-section, .cta-band, .faq, .vectoricons-section, .contact { padding: 48px 16px; }
+  .vectoricons-card { padding: 40px 24px; border-radius: 20px; }
+  .cta-band-card { padding: 48px 24px; border-radius: 20px; }
+  .framework-grid { grid-template-columns: 1fr; }
+  .framework-card.framework-figma { grid-column: 1; max-width: none; padding: 28px; }
+  .contact-email { flex-direction: column; gap: 8px; padding: 16px; }
+  .contact-email-cta { margin: 0; padding: 0; border: 0; }
   .footer-cols { grid-template-columns: 1fr 1fr; gap: 24px; padding: 0 16px; }
   .modal-card { padding: 18px 18px 16px; max-width: calc(100vw - 32px); }
   .modal-head { grid-template-columns: 80px 1fr; gap: 12px; }

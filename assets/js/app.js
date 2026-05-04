@@ -59,7 +59,7 @@
     iconsByPackByWeight: {},  // { pack: { thin: [...], regular: [...], bold: [...] } }
     packCounts: {},           // count of REGULAR icons per pack (for sidebar)
     packCountsRaw: {},        // count including all weights
-    weight: 'all',            // 'all' = show all 7,980 icons across all 3 weights
+    weight: 'regular',        // default — gives a consistent stroke per pack; users can flip to 'all' for everything
     activePack: 'all',
     query: '',
     filtered: [],
@@ -689,7 +689,7 @@
     var parts = [];
     if (state.activePack && state.activePack !== 'all') parts.push('pack/' + state.activePack);
     if (state.query) parts.push('search/' + encodeURIComponent(state.query));
-    if (state.weight !== 'all') parts.push('weight/' + state.weight);
+    if (state.weight !== 'regular') parts.push('weight/' + state.weight);
     var newHash = parts.length ? '#' + parts.join('&') : '';
     if (newHash) {
       if (location.hash !== newHash) history.replaceState(null, '', newHash);
