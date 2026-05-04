@@ -114,30 +114,32 @@ def build_manifest(packs):
 # index.html acts as the template; we run targeted str.replace on these
 # unique substrings. Keep in sync with index.html when those lines change.
 TEMPLATE_TOKENS = {
-    "title": "<title>Atlas Icons — 7,980 free open-source icons by GetIllustrations</title>",
-    "description_meta": '<meta name="description" content="7,980 hand-crafted open-source icons across 41 packs. Made by GetIllustrations exclusively for the Vectoricons.net marketplace. MIT licensed.">',
+    "title": "<title>Atlas Icons — 2,660 free open-source icons in 3 weights · MIT licensed</title>",
+    "description_meta": '<meta name="description" content="Free open-source icon library by GetIllustrations. 2,660 hand-crafted designs in thin, regular and bold weights across 41 packs. Webfont, React, Vue, Flutter, React Native, Figma plugin. MIT licensed.">',
     "canonical": '<link rel="canonical" href="https://iconsatlas.com/">',
-    "og_title": '<meta property="og:title" content="Atlas Icons — 7,980 hand-crafted open-source icons">',
-    "og_description": '<meta property="og:description" content="MIT-licensed icon library by GetIllustrations. 41 packs, webfont + React + Vue + Flutter + React Native. Free forever.">',
+    "og_title": '<meta property="og:title" content="Atlas Icons — 2,660 free open-source icons in 3 weights">',
+    "og_description": '<meta property="og:description" content="MIT-licensed icon library by GetIllustrations. 41 packs, three weights, every framework. Free forever.">',
     "og_url": '<meta property="og:url" content="https://iconsatlas.com/">',
-    "schema_block": "<script type=\"application/ld+json\">",  # marker; we replace whole block via different strategy below
+    "schema_block": "<script type=\"application/ld+json\">",  # marker only
     "app_script": '<script src="assets/js/app.js"></script>',
 }
 
 
 def render_pack_page(template, pack, count, total, all_packs):
     pname = pretty(pack)
-    title = f"{pname} Icons — {count} Free SVG & Webfont Icons · Atlas Icons"
+    # count here is total icons in pack (includes all 3 weights). Unique designs ≈ count/3.
+    unique = max(1, count // 3)
+    title = f"{pname} Icons — {unique} Free Icons in 3 Weights · Atlas Icons"
     if len(title) > 70:
-        title = f"{pname} Icons — {count} Free Icons · Atlas Icons"
+        title = f"{pname} Icons — {unique} Free Icons · Atlas Icons"
     desc = (
-        f"Browse {count} free {pname.lower()} icons by Atlas Icons. Download as SVG, "
-        f"or use as a webfont, in React, Vue, Flutter, or React Native. MIT licensed."
+        f"Browse {unique} free {pname.lower()} icons by Atlas Icons in thin, regular and bold. "
+        f"Download as SVG, webfont, React, Vue, Flutter, or React Native. MIT licensed."
     )
     if len(desc) > 160:
         desc = (
-            f"Browse {count} free {pname.lower()} icons. Download SVG, use as webfont "
-            f"or in React/Vue/Flutter. MIT licensed."
+            f"Browse {unique} free {pname.lower()} icons in 3 weights. Download SVG, webfont, "
+            f"React, Vue, Flutter. MIT licensed."
         )
     canonical = f"https://iconsatlas.com/pack/{pack}/"
     og_title = f"{pname} Icons — {count} free SVG icons · Atlas Icons"
