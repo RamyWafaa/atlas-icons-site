@@ -3,21 +3,23 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Atlas Icons — 7,980 free open-source icons by Vectopus</title>
-  <meta name="description" content="7,980 hand-crafted open-source icons across 41 packs. Drop-in webfont, plus React, Vue, Flutter, React Native packages. MIT licensed, free forever.">
+  <title>Atlas Icons — 7,980 free open-source icons by GetIllustrations</title>
+  <meta name="description" content="7,980 hand-crafted open-source icons across 41 packs. Made by GetIllustrations exclusively for the Vectoricons.net marketplace. MIT licensed.">
   <link rel="canonical" href="https://iconsatlas.com/">
 
   <meta property="og:type" content="website">
-  <meta property="og:title" content="Atlas Icons — 7,980 free open-source icons">
-  <meta property="og:description" content="MIT-licensed icon library. 41 packs, webfont + React + Vue + Flutter + React Native. Free forever.">
+  <meta property="og:title" content="Atlas Icons — 7,980 hand-crafted open-source icons">
+  <meta property="og:description" content="MIT-licensed icon library by GetIllustrations. 41 packs, webfont + React + Vue + Flutter + React Native. Free forever.">
   <meta property="og:url" content="https://iconsatlas.com/">
   <meta property="og:image" content="https://iconsatlas.com/assets/img/og-image.png">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="theme-color" content="#0c0a09">
+  <meta name="theme-color" content="#CCEA4A">
   <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
 
-  <link rel="preconnect" href="https://rsms.me">
-  <link rel="stylesheet" href="https://rsms.me/inter/inter.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,300..800&family=Instrument+Serif:ital@0;1&display=swap">
+
   <link rel="stylesheet" href="vendor/atlas-icons-font/style.css">
   <link rel="stylesheet" href="assets/css/site.css">
 
@@ -26,12 +28,13 @@
     "@context": "https://schema.org",
     "@type": "SoftwareApplication",
     "name": "Atlas Icons",
-    "description": "Free, open-source icon library with 7,980 icons across 41 packs.",
+    "description": "Free, open-source icon library with 7,980 icons across 41 packs. By GetIllustrations for Vectoricons.net.",
     "applicationCategory": "DeveloperApplication",
     "operatingSystem": "Any",
     "offers": {"@type": "Offer", "price": "0", "priceCurrency": "USD"},
     "license": "https://opensource.org/licenses/MIT",
-    "author": {"@type": "Person", "name": "Ramy Wafaa"},
+    "author": {"@type": "Organization", "name": "GetIllustrations", "url": "https://getillustrations.com"},
+    "publisher": {"@type": "Organization", "name": "Vectoricons", "url": "https://vectoricons.net"},
     "url": "https://iconsatlas.com/",
     "downloadUrl": "https://github.com/Vectopus/Atlas-icons-font"
   }
@@ -46,18 +49,23 @@
     <nav class="topbar-nav">
       <a href="#install">Install</a>
       <a href="#frameworks">Frameworks</a>
-      <a href="https://github.com/Vectopus/Atlas-icons-font" target="_blank" rel="noopener noreferrer">GitHub</a>
+      <a href="https://vectoricons.net" target="_blank" rel="noopener noreferrer">Vectoricons.net</a>
+      <a href="https://github.com/Vectopus/Atlas-icons-font" target="_blank" rel="noopener noreferrer" class="topbar-cta">GitHub →</a>
     </nav>
   </header>
 
   <section class="hero">
-    <p class="hero-eyebrow">Open-source icon library</p>
+    <p class="hero-eyebrow">
+      <span class="dot"></span>
+      Made by <a href="https://getillustrations.com" target="_blank" rel="noopener noreferrer">GetIllustrations</a>
+      &middot; Exclusively for <a href="https://vectoricons.net" target="_blank" rel="noopener noreferrer">Vectoricons.net</a>
+    </p>
     <h1 class="hero-headline">
-      <span id="totalCount">7,980</span> free icons,
+      <span id="totalCount">7,980</span> <span class="hero-em">hand-crafted</span>
       <br>
-      <span class="hero-em">hand-crafted</span> and yours.
+      icons. <span class="hero-strong">Free forever.</span>
     </h1>
-    <p class="hero-sub">41 packs. Drop into any project as a webfont, or with the React, Vue, Flutter, and React Native packages. MIT licensed.</p>
+    <p class="hero-sub">An open-source library across 41 packs. Drop into any project as a webfont, or use the React, Vue, Flutter, and React Native packages. MIT licensed, made for designers and developers.</p>
 
     <div class="hero-search-wrap">
       <input
@@ -77,10 +85,10 @@
   </section>
 
   <main id="content">
-    <!-- View 1: Category preview cards (default, no filter) -->
+    <!-- View 1: Category preview cards (default) -->
     <section class="category-grid" id="categoryGrid" hidden></section>
 
-    <!-- View 2: Filtered icons (when a pack is selected or search is active) -->
+    <!-- View 2: Filtered icons (when a pack is selected or search active) -->
     <section class="filtered-view" id="filteredView" hidden>
       <div class="filtered-toolbar">
         <button class="btn-back" id="backBtn">← All packs</button>
@@ -104,13 +112,14 @@
   </main>
 
   <section class="frameworks-section" id="frameworks">
-    <h2 class="section-title">Use it anywhere</h2>
-    <p class="section-sub">One icon set. Five distribution formats. Same names, same look.</p>
+    <p class="section-eyebrow">Distribution</p>
+    <h2 class="section-title">One library, <span class="hero-em">five formats</span>.</h2>
+    <p class="section-sub">Same icon names. Same look. Pick the one that fits your stack.</p>
     <div class="framework-grid">
       <a class="framework-card" href="https://www.npmjs.com/package/@vectoricons/atlas-icons" target="_blank" rel="noopener noreferrer">
         <span class="framework-icon"><i class="at-laptop"></i></span>
         <h3>Webfont</h3>
-        <p>Plain HTML, classnames like <code>at-arrow-down</code>. Zero JS.</p>
+        <p>Plain HTML, classes like <code>at-arrow-down</code>. Zero JS.</p>
         <code class="framework-snippet">&lt;link rel="stylesheet" href="https://unpkg.com/@vectoricons/atlas-icons/style.css"&gt;</code>
       </a>
       <a class="framework-card" href="https://github.com/Vectopus/Atlas-icons-react" target="_blank" rel="noopener noreferrer">
@@ -146,16 +155,29 @@
     </div>
   </section>
 
+  <section class="cta-band">
+    <div class="cta-band-inner">
+      <p class="cta-eyebrow">Need premium hand-drawn work too?</p>
+      <h2 class="cta-headline">Atlas Icons is the open-source side of <span class="hero-em">GetIllustrations</span>.</h2>
+      <p class="cta-sub">For premium hand-drawn illustrations, custom icon packs, and design-system-ready assets, we're at <a href="https://getillustrations.com" target="_blank" rel="noopener noreferrer">getillustrations.com</a>. For the full Vectoricons marketplace including 3D, stickers, and credits-based plans, visit <a href="https://vectoricons.net" target="_blank" rel="noopener noreferrer">vectoricons.net</a>.</p>
+      <div class="cta-actions">
+        <a class="btn-primary" href="https://getillustrations.com" target="_blank" rel="noopener noreferrer">Browse GetIllustrations →</a>
+        <a class="btn-secondary" href="https://vectoricons.net" target="_blank" rel="noopener noreferrer">Vectoricons.net</a>
+      </div>
+    </div>
+  </section>
+
   <footer class="site-footer">
     <div class="footer-cols">
       <div class="footer-col">
         <span class="footer-mark"><i class="at-artboards"></i></span>
         <p class="footer-name">Atlas Icons</p>
         <p class="footer-tagline">7,980 hand-crafted icons. MIT licensed. Free forever.</p>
+        <p class="footer-credit">Made by <a href="https://getillustrations.com" target="_blank" rel="noopener noreferrer">GetIllustrations</a> exclusively for <a href="https://vectoricons.net" target="_blank" rel="noopener noreferrer">Vectoricons.net</a> marketplace.</p>
       </div>
       <div class="footer-col">
         <h4>Library</h4>
-        <a href="https://github.com/Vectopus/Atlas-icons-font" target="_blank" rel="noopener noreferrer">Atlas-icons-font (source)</a>
+        <a href="https://github.com/Vectopus/Atlas-icons-font" target="_blank" rel="noopener noreferrer">Source on GitHub</a>
         <a href="https://www.npmjs.com/package/@vectoricons/atlas-icons" target="_blank" rel="noopener noreferrer">npm package</a>
         <a href="https://github.com/Vectopus" target="_blank" rel="noopener noreferrer">All Vectopus repos</a>
       </div>
@@ -167,9 +189,10 @@
         <a href="https://github.com/Vectopus/Atlas-icons-react-native" target="_blank" rel="noopener noreferrer">React Native</a>
       </div>
       <div class="footer-col">
-        <h4>About</h4>
-        <p class="footer-credit">Made by <a href="https://github.com/RamyWafaa" target="_blank" rel="noopener noreferrer">Ramy Wafaa</a>. Source for this site at <a href="https://github.com/RamyWafaa/atlas-icons-site" target="_blank" rel="noopener noreferrer">RamyWafaa/atlas-icons-site</a>.</p>
-        <p class="footer-credit">Need premium hand-drawn illustrations and icons? <a href="https://getillustrations.com/" target="_blank" rel="noopener noreferrer">getillustrations.com</a></p>
+        <h4>Made by</h4>
+        <a href="https://getillustrations.com" target="_blank" rel="noopener noreferrer">GetIllustrations</a>
+        <a href="https://vectoricons.net" target="_blank" rel="noopener noreferrer">Vectoricons.net</a>
+        <a href="https://github.com/RamyWafaa/atlas-icons-site" target="_blank" rel="noopener noreferrer">This site (source)</a>
       </div>
     </div>
     <p class="footer-meta">© 2026 Vectopus FZ-LLC · MIT License</p>
