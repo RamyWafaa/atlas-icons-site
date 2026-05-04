@@ -104,6 +104,12 @@
       state.iconsByPack[icon.p].push(icon);
       state.iconsByClass[icon.c] = icon;
     }
+    // Per-pack pages set window.__INITIAL_PACK in inline script before app.js loads.
+    // This lets each /pack/<name>/ HTML page boot directly into its filter.
+    if (typeof window !== 'undefined' && window.__INITIAL_PACK
+        && state.packCounts[window.__INITIAL_PACK]) {
+      state.activePack = window.__INITIAL_PACK;
+    }
   }
 
   // ---------- view router ----------
@@ -128,12 +134,17 @@
   }
 
   // ---------- category preview cards ----------
+  // Rendered as <a href="/pack/<name>/"> (not <button>) so search engines
+  // can crawl every pack page. Click handler intercepts to do in-page
+  // filter without a full reload, but right-click / Cmd+Click / Google
+  // crawler all see real anchors.
   function buildCategoryGrid() {
     var packs = Object.keys(state.packCounts).sort();
     var frag = document.createDocumentFragment();
     packs.forEach(function (p) {
-      var card = document.createElement('button');
+      var card = document.createElement('a');
       card.className = 'category-card';
+      card.href = '/pack/' + p + '/';
       card.dataset.pack = p;
       card.setAttribute('aria-label', 'Browse ' + prettyPack(p) + ' pack');
 
@@ -481,6 +492,10 @@
     document.addEventListener('click', function (e) {
       var catCard = e.target.closest('.category-card');
       if (catCard) {
+        // Honor real anchor for middle-click, ctrl/cmd-click, right-click,
+        // shift-click — those should navigate to /pack/<name>/ as a real page.
+        if (e.button === 1 || e.metaKey || e.ctrlKey || e.shiftKey) return;
+        e.preventDefault();
         setActivePack(catCard.dataset.pack);
         route();
         window.scrollTo({ top: 0, behavior: 'smooth' });
